@@ -1,92 +1,119 @@
-# can sOT protocol
+# CAN sot protocol  [🚧 WIP 🚧]
+This is the **CAN _simple object tree_ protocol** for the CAN bus.
+Although it uses ideas from CANopen, it is not compatible with it but can be seen as a very simplified version.
 
+## Concepts
 
+In the network there are multiple clients and one master.
+The whole communication structure (Object Tree and Real Time Packages) a client offers is specified in a yaml file (example: [example-can-sot.spec.yaml](example/example-can-sot.spec.yaml)).
 
-## Getting started
+### Object Tree
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Clients offer an object tree, where each tree node represents a value that can be read or written from a master.
+Tree nodes have a datatype (which can be at max 8 bytes long).
+Below you can see an example of a simple object tree:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
+```yaml
+- settings:
+    - value1: uint32
+    - other_settings:
+        - some_flag: bool
+    - value2: float64
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/JeyRunner/can-sot-protocol.git
-git branch -M main
-git push -uf origin main
+
+In general nodes can be specified as readable, writable or both.
+The master node can now read and write values of the nodes of the clients in the network.
+This is done by sending one object node value at a time via a can data frame (similar to SDOs in CANopen, but here the size of value is limited to 7 bytes).
+Each node in the object tree gets an unique id (2 bytes) that is then part of the can frame that transfers the value.
+
+### Real Time Packages
+
+Specific packages, that will directly be mapped to can frames, can be specified.
+These packages are ment to for directly transfer multiple node values at real time without protocol overhead (like PDOs in CANopen).
+Again the total size is limited by the maximum CAN frame data size (8bytes).
+A RTP message can frame would look like this:
+
+## Implementation
+
+There is a python tool that generates C++ code for accessing the object tree from a configuration yaml file. The yaml file describes the object tree and contains all definitions for the Real Time Packages.
+
+### General API
+For the client:
+```c++
+// ... init of canSot ...
+while (true) {
+    // e.g. in the main loop on a microcontroller:
+    
+    // process rx can frames and write them into the object tree
+    // also send can frames to the master (can be also done with separate function)
+    // this can also be done in e.g. a separate freeRTOS task
+    canSot.processRxTxCanPackages(); // this will lock the object tree
+    
+    // before writing or reading values lock the object tree
+    //    acquire because can packages may be process by other thread/task
+    ObjectTreeLocked ot = canSot.acquireObjectTree(); 
+    ot.some_node.some_value.write(32f);
+    int value2 = ot.some_node.value2.read();
+    
+    // e.g. react to incoming real time packages
+    if (canSot.RPTsIncomming.SetValue3.recived()) {
+      // ...
+    }
+    // reset all received flags of incoming RPTs
+    canSot.RPTsIncomming.ReceivedFlagsReset();
+    
+    // will send all change values of OT to master (slower, with protocol overhead)
+    ot.sendAllChangedValuesToMaster()
+    
+    // OR just send a specific RTP that will contain only some value(s) of the OT 
+    //    (e.g. some_node.some_value that we wrote before)
+    // this is faster and without overhead, will just send one can frame
+    canSot.RTPsOutgoing.UpdateValue2RTP.sendToMaster();
+    
+    // unlock after access
+    ot.unlock();
+    
+    // to other stuff e.g. with value2
+    printf("value2: %d", value2)
+}
 ```
 
-## Integrate with your tools
+For the master (works with socketCAN):
+```c++
+// ... init of canSot ...
+while (true) {
+    // process rx can frames and write them into the object tree
+    // also send can frames
+    canSot.processRxTxCanPackages();
+    
+    // here no locking is required of object tree since all is done in one thread
+    ObjectTree ot = canSot.objectTree();
+    ot.some_node.some_valueY.write(32f);
 
-- [ ] [Set up project integrations](https://gitlab.com/JeyRunner/can-sot-protocol/-/settings/integrations)
+    // e.g. react to incoming real time packages
+    if (canSot.RPTsIncomming.SetValue4.recived()) {
+    // ...
+    }
+    // reset all received flags of incoming RPTs
+    canSot.RPTsIncomming.ReceivedFlagsReset();
 
-## Collaborate with your team
+    // will send all change values of OT to client (slower, with protocol overhead)
+    ot.sendAllChangedValuesToClient();
+    // OR send all values to client
+    ot.sendAllValuesToClient();
+    
+    // OR just send a specific RTP that will contain only some value(s) of the OT 
+    //    (e.g. some_node.some_value that we wrote before)
+    // this is faster and without overhead, will just send one can frame
+    canSot.RTPsOutgoing.some_valueY.sendToMaster();
+}
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
 
-## Test and Deploy
 
-Use the built-in continuous integration in GitLab.
+#### Implementation Status
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+| Type   | Platform        | Status      |
+| ------ | --------------- |-------------|
+| master | linux/socketCAN | ✍🏻 planned |
+| client | esp32           | ✍🏻 planned |
