@@ -24,14 +24,17 @@ Below you can see an example of a simple object tree:
 In general nodes can be specified as readable, writable or both.
 The master node can now read and write values of the nodes of the clients in the network.
 This is done by sending one object node value at a time via a can data frame (similar to SDOs in CANopen, but here the size of value is limited to 7 bytes).
-Each node in the object tree gets an unique id (2 bytes) that is then part of the can frame that transfers the value.
+Each node in the object tree gets a unique id (2 bytes) that is then part of the can frame that transfers the value.
+For details see [protocol_can_frames.md](doc/protocol_can_frames.md).
 
-### Real Time Packages
+Note that the object tree will not be saved in persistent memory, therefore the master should send all settings on startup to the client.
+
+### Stream Packages
 
 Specific packages, that will directly be mapped to can frames, can be specified.
 These packages are ment to for directly transfer multiple node values at real time without protocol overhead (like PDOs in CANopen).
 Again the total size is limited by the maximum CAN frame data size (8bytes).
-A RTP message can frame would look like this:
+For details see [protocol_can_frames.md](doc/protocol_can_frames.md).
 
 ## Implementation
 
@@ -50,25 +53,26 @@ while (true) {
     canSot.processRxTxCanPackages(); // this will lock the object tree
     
     // before writing or reading values lock the object tree
-    //    acquire because can packages may be process by other thread/task
+    //    acquire because can packages may be processed in other thread/task
     ObjectTreeLocked ot = canSot.acquireObjectTree(); 
     ot.some_node.some_value.write(32f);
     int value2 = ot.some_node.value2.read();
     
-    // e.g. react to incoming real time packages
-    if (canSot.RPTsIncomming.SetValue3.recived()) {
+    // e.g. react to incoming stream packages
+    if (canSot.SPsIncomming.SetValue3.received()) {
       // ...
     }
-    // reset all received flags of incoming RPTs
-    canSot.RPTsIncomming.ReceivedFlagsReset();
+    // reset all received flags of incoming SPs
+    // reset all received flags of incoming SPs
+    canSot.SPsIncomming.ReceivedFlagsReset();
     
     // will send all change values of OT to master (slower, with protocol overhead)
     ot.sendAllChangedValuesToMaster()
     
-    // OR just send a specific RTP that will contain only some value(s) of the OT 
+    // OR just send a specific SP that will contain only some value(s) of the OT 
     //    (e.g. some_node.some_value that we wrote before)
     // this is faster and without overhead, will just send one can frame
-    canSot.RTPsOutgoing.UpdateValue2RTP.sendToMaster();
+    canSot.SPsOutgoing.UpdateValue2SP.sendToMaster();
     
     // unlock after access
     ot.unlock();
@@ -91,21 +95,21 @@ while (true) {
     ot.some_node.some_valueY.write(32f);
 
     // e.g. react to incoming real time packages
-    if (canSot.RPTsIncomming.SetValue4.recived()) {
+    if (canSot.RPTsIncomming.SetValue4.received()) {
     // ...
     }
-    // reset all received flags of incoming RPTs
-    canSot.RPTsIncomming.ReceivedFlagsReset();
+    // reset all received flags of incoming SPs
+    canSot.SPsIncomming.ReceivedFlagsReset();
 
     // will send all change values of OT to client (slower, with protocol overhead)
     ot.sendAllChangedValuesToClient();
     // OR send all values to client
     ot.sendAllValuesToClient();
     
-    // OR just send a specific RTP that will contain only some value(s) of the OT 
+    // OR just send a specific SP that will contain only some value(s) of the OT 
     //    (e.g. some_node.some_value that we wrote before)
     // this is faster and without overhead, will just send one can frame
-    canSot.RTPsOutgoing.some_valueY.sendToMaster();
+    canSot.SPsOutgoing.some_valueY.sendToMaster();
 }
 ```
 

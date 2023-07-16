@@ -4,6 +4,10 @@ global_defs:
         OK: 0
         ERROR: 1
         DISABLED: 2
+    - MOTOR_CHANGE_STATE:
+        DISABLE: 0
+        ENABLE: 1
+        START_CONFIGURATION_PROCESS: 2
 
 
 object_tree:
@@ -12,13 +16,23 @@ object_tree:
           - name: smoothing # name of the value (just has to be unique in the current tree branch)
             type: float32   # possible type value: uint8, ..., int8, ..., float16, ..., ENUM_NAME
             access: rw      # access rights for the master perspective,
-                            #    possible values: 'r' for read, 'w' for write, 'rw' for read and write
-
+                            #    possible values: 'r' for read, 'w' for write, 'rw' for read and write, 
+                            #                     'only_rtp' when this value can only be written or read by a stream packages
   - motor1:
       - name: status
         type: MOTOR_STATUS
         access: r
         default: DISABLED
+        
+        # This is a tmp request value: 
+        #   By default its value is NOT_SET, but when here the master write the value on the cilent it can be read out ONCE by the client
+        #   After reading out the value on the cilent by the client it is set again to NOT_SET
+        #   This can be used to execute a one time action with a parameter (like a remote function)
+      - name: RequestStatusChange
+        type: MOTOR_CHANGE_STATE
+        access: w
+        is_tmp_request_value: true 
+        
       - current_values:
           - name: position
             type: float32
@@ -37,14 +51,14 @@ object_tree:
 
 
 
-# define all possible real time packages, these can be also used to send events
-real_time_packages:
+# define all possible stream time packages, these can be also used to send events
+stream_packages:
   - name: CurrentPosAndVel
-    direction: client_to_master    # communication direction of the RTP
+    direction: client_to_master    # communication direction of the SP
     data_object_tree_entries:                # the total size of all entries has to be <= 8 bytes
       - "motor1.current_values.position"     # these must point to an entry in the object tree
       - "motor1.current_values.velocity"
-    periodic_update:          # for RTP that are send from the client to the master, the master can enable automatic periodic updates
+    periodic_update:          # for SPs that are send from the client to the master, the master can enable automatic periodic updates
       update_frequencies:     # these are send in a frequency set by the master
         - 100Hz
         - 1kHz
