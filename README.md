@@ -1,4 +1,4 @@
-# CAN sot protocol  [🚧 WIP 🚧]
+# CAN SOT Protocol 🌳 &emsp;  🚧 WIP 🚧
 This is the **CAN _simple object tree_ protocol** for the CAN bus.
 Although it uses ideas from CANopen, it is not compatible with it but can be seen as a very simplified version.
 
@@ -39,6 +39,8 @@ For details see [protocol_can_frames.md](doc/protocol_can_frames.md).
 ## Implementation
 
 There is a python tool that generates C++ code for accessing the object tree from a configuration yaml file. The yaml file describes the object tree and contains all definitions for the Real Time Packages.
+
+The implementation is independent of the used platform. To support a platform a corresponding driver has to be implemented in `src/drivers`.
 
 ### General API
 For the client:
