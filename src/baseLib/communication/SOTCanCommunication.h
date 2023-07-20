@@ -5,76 +5,116 @@
 #include "SOTDefs.h"
 #include "util/Logging.h"
 #include "objectTree/ObjectTree.h"
+#include "objectTree/OTTemplate.h"
+
+#ifdef IS_MASTER_DEF
+#include "set"
+#include "util/Result.h"
+#endif
+
 
 
 enum class SOT_COMMUNICATION_STATE {
     UNINITIALIZED,
-    SENT_INITIALIZATION_REQUEST,
+    INITIALIZING,
     INITIALIZED,
 };
 
 
-
+#if __cplusplus > 201703L
+//template<ProtocolDefType PROTOCOL_DEF>
+template<class PROTOCOL_DEF = Protocol<1,1>>
+#else
+template<class PROTOCOL_DEF>
+#endif
 class SOTCanCommunication {
   public:
-    SOT_COMMUNICATION_STATE communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
+    uint8_t myDeviceId = 0;
+
+    /**
+     * check received frame data size is >= 1, so that it can hold the nodeId in the first byte
+     * @return true if ok
+     */
+    static bool checkPackageDataSizeForNodeId(const CanFrame &frame) {
+      if (frame.dataLength < 1) {
+        logError("received Can Frame data size %d bytes is smaller 1 byte (required for nodeId)", frame.dataLength);
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * check received frame data size depending on data type of the node
+     * @return true if ok
+     */
+    static bool checkPackageDataSizeForNodeValue(const CanFrame &frame, const Result<ValueNodeAbstract *> &node) {
+      if (frame.dataLength < node._->getRequiredDataSizeInBytes()+1) {
+        logError("received Can Frame data size %d bytes is smaller then expected %d bytes", frame.dataLength, node._->getRequiredDataSizeInBytes()+1);
+        return true;
+      }
+      return false;
+    }
+
+
+    void sendInitCommunicationRequest(uint8_t targetDeviceId) {
+      sendMessage(SOT_MESSAGE_TYPE::INIT_COMMUNICATION_REQUEST, targetDeviceId, nullptr, 0);
+    }
+
+    void sendInitCommunicationResponse(uint8_t targetDeviceId) {
+      sendMessage(SOT_MESSAGE_TYPE::INIT_COMMUNICATION_RESPONSE, targetDeviceId, nullptr, 0);
+    }
+
+    void sendWriteNodeValueRequest(ValueNodeAbstract &valueNode, uint8_t targetDeviceId) {
+      uint8_t dataSize = valueNode.getRequiredDataSizeInBytes() + 1; // first byte for nodeId
+      uint8_t data[dataSize];
+      data[0] = valueNode.nodeId;
+      valueNode.writeToData(&data[1]);
+      sendMessage(SOT_MESSAGE_TYPE::WRITE_NODE_VALUE_REQEUST, targetDeviceId, data, dataSize);
+    }
+
+    void sendReadNodeValueResponse(ValueNodeAbstract *valueNode, uint8_t targetDeviceId) {
+      uint8_t dataSize = valueNode->getRequiredDataSizeInBytes() + 1; // first byte for nodeId
+      uint8_t data[dataSize];
+      data[0] = valueNode->nodeId;
+      valueNode->writeToData(&data[1]);
+      sendMessage(SOT_MESSAGE_TYPE::READ_NODE_VALUE_RESPONSE, targetDeviceId, data, dataSize);
+    }
+
+
+    void sendMessage(SOT_MESSAGE_TYPE type, uint8_t targetDeviceId, uint8_t *data, uint8_t dataSize) {
+      CanFrame frame;
+      packCanFrameId(frame, DeviceIdAndSOTMessageType{
+          .sourceDeviceId = myDeviceId,
+          .targetDeviceId = targetDeviceId,
+          .messageType = type
+      });
+      frame.data = data;
+      frame.dataLength = dataSize;
+      canSendFrame(frame);
+    }
+
+
+    static NodeId nodeIdFromPackage(CanFrame frame) {
+      return frame.data[0];
+    }
+
+
 
     /**
      * Handle incoming can frame. Store the can frame in the receive buffer.
      */
     static void onCanFrameReceived(CanFrame &frame) {
+
     }
+
 
     /**
      * Process Can frame from the receive buffer.
      * Handle responses, writes value to OT.
      */
-    void processCanFrameReceived(CanFrame &frame) {
-      DeviceIdAndSOTMessageType devIdAndType = unpackCanFrameId(frame);
-
-      switch (devIdAndType.packageType) {
-        case INIT_COMMUNICATION_REQUEST: {
-          if constexpr (IS_CLIENT) {
-            // send all meta init node values
-            for (auto valueNode : metaNodeValuesToSendOnInit) {
-              sendWriteNodeValueRequest(*valueNode);
-            }
-          }
-          break;
-        }
+    virtual void processCanFrameReceived(CanFrame &frame) = 0;
 
 
-        case INIT_COMMUNICATION_RESPONSE:
-          if constexpr (IS_MASTER) {
-            if (communicationState == SOT_COMMUNICATION_STATE::SENT_INITIALIZATION_REQUEST) {
-              communicationState = SOT_COMMUNICATION_STATE::INITIALIZED;
-            }
-            else {
-              logWarn("Got INIT_COMMUNICATION_RESPONSE although currently not in SENT_INITIALIZATION_REQUEST state");
-            }
-
-          }
-          break;
-
-        case COMMUNICATION_ERROR:
-          logWarn("Got COMMUNICATION_ERROR");
-          break;
-
-        default: {
-          if (devIdAndType.packageType >= SOT_MESSAGE_ID_FIRST_SP_ID) {
-            // it's a Stream Package
-          }
-          break;
-        }
-      }
-    }
-
-
-
-
-    void sendWriteNodeValueRequest(ValueNodeAbstract &valueNode) {
-
-    }
 
 
     /**

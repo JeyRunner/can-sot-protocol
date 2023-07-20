@@ -1,6 +1,15 @@
 #include "OTNode.h"
 
-
+const uint8_t ValueNodeAbstract::getRequiredDataSizeInBytes() const {
+  switch (dataType) {
+    case VALUE_NODE_DATA_TYPES::UINT8:
+      return 1;
+    case VALUE_NODE_DATA_TYPES::UINT16:
+      return 2;
+    case VALUE_NODE_DATA_TYPES::F32:
+      return 4;
+  }
+}
 
 void ValueNodeAbstract::writeToData(uint8_t *data) {
   // @todo: handle endianness
@@ -44,3 +53,4 @@ void ValueNodeAbstract::readFromData(const uint8_t *data) {
     }
   }
 }
+

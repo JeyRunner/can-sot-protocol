@@ -2,7 +2,7 @@
 
 #include <cinttypes>
 #include "OTNodeValueTypes.h"
-class SOTCanCommunication;
+#include "communication/can/Can.h"
 
 
 using NodeId = uint8_t;
@@ -30,10 +30,21 @@ class ValueNodeAbstract {
     VALUE_NODE_DATA_TYPES dataType;
 
   public:
+
+    const uint8_t getRequiredDataSizeInBytes() const;
+
     /**
      * Write value to data of a can frame.
      */
     void writeToData(uint8_t *data);
+
+    /**
+     * Write value to data of a can frame.
+     */
+    template<uint8_t SIZE>
+    void writeToData(CanData<SIZE> data) {
+      writeToData(data);
+    }
 
     /**
      * Read value from data of a can frame.
@@ -41,7 +52,14 @@ class ValueNodeAbstract {
      */
     void readFromData(const uint8_t *data);
 
-    friend SOTCanCommunication;
+    /**
+     * Read value from data of a can frame.
+     * This will overwrite the current value of the node.
+     */
+    template<uint8_t SIZE>
+    void readFromData(CanData<SIZE> data) {
+      readFromData(data);
+    }
 };
 
 

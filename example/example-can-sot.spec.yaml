@@ -26,7 +26,7 @@ object_tree:
         
         # This is a tmp request value: 
         #   By default its value is NOT_SET, but when here the master write the value on the cilent it can be read out ONCE by the client
-        #   After reading out the value on the cilent by the client it is set again to NOT_SET
+        #   After reading out the value on the client by the client it is set again to NOT_SET
         #   This can be used to execute a one time action with a parameter (like a remote function)
       - name: RequestStatusChange
         type: MOTOR_CHANGE_STATE
@@ -40,6 +40,10 @@ object_tree:
           - name: velocity
             type: float32
             access: r
+          - torque: # value node can be also defined this way (name inline) as alternative to (name: torque)
+              type: float32
+              access: r
+
       - target_values:
           - name: position
             type: float32
@@ -62,7 +66,21 @@ stream_packages:
       update_frequencies:     # these are send in a frequency set by the master
         - 100Hz
         - 1kHz
-        -
+
+  # Use transforms in this to PO to transfer 3 values (with original combined size > 8 byte)
+  - name: CurrentPosVelTorque
+    direction: client_to_master
+    data_object_tree_entries: # the total size of all entries has to be <= 8 bytes
+      - "motor1.current_values.position"     # these must point to an entry in the object tree
+      - "motor1.current_values.velocity":
+          transform:  # during sending this value in this SP it is transformed to an int16 value (will just need 2 byte)
+            type: int16 # during sending value will be converted to this type via sendValue=(int16)original*scale_factor
+            scale_factor: 0.0001 # to map the float to the int range, the original value is multiplied with the scale_factor
+      - "motor1.current_values.torque":
+          transform:
+            type: int16
+            scale_factor: 0.0001
+
   - name: TargetPosAndVel
     direction: master_to_client
     data_object_tree_entries:
