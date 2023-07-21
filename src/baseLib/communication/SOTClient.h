@@ -12,10 +12,17 @@
 
 #ifdef DEV_MODE
 using PROTOCOL_DEF = ProtocolDef<1,1>; // just dummy value to get code autocompletion
+//template<class PROTOCOL_DEF> requires ProtocolDefType<PROTOCOL_DEF, 1>
 #else
 template<class PROTOCOL_DEF = ProtocolDef<1,1>>
 #endif
 class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
+    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeId;
+    using SOTCanCommunication<PROTOCOL_DEF>::sendInitCommunicationResponse;
+    using SOTCanCommunication<PROTOCOL_DEF>::sendWriteNodeValueRequest;
+    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeValue;
+    using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueResponse;
+
   public:
     /// contains the object tree
     PROTOCOL_DEF protocolDef;

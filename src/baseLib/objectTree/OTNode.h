@@ -24,7 +24,7 @@ class Node {
 
 class ValueNodeAbstract {
   public:
-    explicit ValueNodeAbstract(NodeId nodeId) : nodeId(nodeId) {};
+    ValueNodeAbstract(NodeId nodeId) : nodeId(nodeId) {};
   public: // protected
     NodeId nodeId;
     VALUE_NODE_DATA_TYPES dataType;
@@ -69,7 +69,7 @@ class ValueNodeAbstract {
 template<class TYPE>
 class ValueNodeTypeAbstract: public ValueNodeAbstract {
   public:
-    explicit ValueNodeTypeAbstract(NodeId nodeId) : ValueNodeAbstract(nodeId) {
+    ValueNodeTypeAbstract(NodeId nodeId) : ValueNodeAbstract(nodeId) {
       dataType = getValueNoteDataType<TYPE>();
     };
 
@@ -86,7 +86,7 @@ class ValueNodeTypeAbstract: public ValueNodeAbstract {
 template<class TYPE, NodeId NODE_ID>
 class ValueNodeWritable: public ValueNodeTypeAbstract<TYPE> {
   public:
-    explicit ValueNodeWritable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
+    ValueNodeWritable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
     };
 
     void write(TYPE value) {
@@ -97,7 +97,7 @@ class ValueNodeWritable: public ValueNodeTypeAbstract<TYPE> {
 template<class TYPE, NodeId NODE_ID>
 class ValueNodeReadable: public ValueNodeTypeAbstract<TYPE> {
   public:
-    explicit ValueNodeReadable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
+    ValueNodeReadable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
     };
 
 
@@ -109,7 +109,7 @@ class ValueNodeReadable: public ValueNodeTypeAbstract<TYPE> {
 template<class TYPE, NodeId NODE_ID>
 class ValueNodeReadWriteable: public ValueNodeTypeAbstract<TYPE> {
   public:
-    explicit ValueNodeReadWriteable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
+    ValueNodeReadWriteable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
     };
 
     void write(TYPE value) {

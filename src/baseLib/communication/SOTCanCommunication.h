@@ -6,11 +6,12 @@
 #include "util/Logging.h"
 #include "objectTree/ObjectTree.h"
 #include "objectTree/OTTemplate.h"
+#include "util/Result.h"
 
 #ifdef IS_MASTER_DEF
 #include "set"
-#include "util/Result.h"
 #endif
+
 
 
 
@@ -21,8 +22,8 @@ enum class SOT_COMMUNICATION_STATE {
 };
 
 
-#if __cplusplus > 201703L
-//template<ProtocolDefType PROTOCOL_DEF>
+#ifdef DEV_MODE
+//template<class PROTOCOL_DEF> requires ProtocolDefType<PROTOCOL_DEF, 1>
 template<class PROTOCOL_DEF = Protocol<1,1>>
 #else
 template<class PROTOCOL_DEF>
@@ -116,11 +117,17 @@ class SOTCanCommunication {
 
 
 
+    /**
+     * Allocates a new can from to send with the given size for the data.
+     */
+    virtual CanFrame& allocNewCanTxFrame(uint8_t dataSize) {
+
+    }
 
     /**
      * Put can frame into the send buffer.
      */
-    static void canSendFrame(CanFrame &frame) {
+    virtual void canSendFrame(CanFrame &frame) {
 
     }
 };

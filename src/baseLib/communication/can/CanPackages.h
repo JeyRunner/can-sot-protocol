@@ -62,7 +62,7 @@ struct DeviceIdAndSOTMessageType {
 /**
  * Get DeviceId and SOT message ID from can frame ID.
  */
-DeviceIdAndSOTMessageType unpackCanFrameId(CanFrame &frame) {
+static DeviceIdAndSOTMessageType unpackCanFrameId(CanFrame &frame) {
   return DeviceIdAndSOTMessageType{
     .sourceDeviceId = (uint8_t) ((frame.canId >> 8) & 0b000'0000'0111),
     .targetDeviceId = (uint8_t) ((frame.canId >> 5) & 0b000'0000'0111),
@@ -73,7 +73,7 @@ DeviceIdAndSOTMessageType unpackCanFrameId(CanFrame &frame) {
 /**
  * Write DeviceId and SOT message ID into CAN ID of given CAN frame.
  */
-void packCanFrameId(CanFrame &frame, DeviceIdAndSOTMessageType idAndType) {
+static void packCanFrameId(CanFrame &frame, DeviceIdAndSOTMessageType idAndType) {
   frame.canId =
       ((idAndType.sourceDeviceId & 0b000'0000'0111) << 8) |
       ((idAndType.targetDeviceId & 0b000'0000'0111) << 5) |

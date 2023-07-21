@@ -6,9 +6,10 @@
 #include "SOTDefs.h"
 #include "util/Logging.h"
 #include "objectTree/ObjectTree.h"
+#include "SOTCanCommunication.h"
 
 
-template<class PROTOCOL_DEF = ProtocolDef<1,1>>
+template<class PROTOCOL_DEF>
 struct ConnectedClient {
     SOT_COMMUNICATION_STATE communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
     /// contains object tree
@@ -19,9 +20,16 @@ struct ConnectedClient {
 #ifdef DEV_MODE
 using PROTOCOL_DEF = ProtocolDef<1,1>; // just dummy value to get code autocompletion
 #else
-template<class PROTOCOL_DEF = ProtocolDef<1,1>>
+template<class PROTOCOL_DEF>
 #endif
 class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF> {
+    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeId;
+    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeValue;
+    using SOTCanCommunication<PROTOCOL_DEF>::sendInitCommunicationResponse;
+    using SOTCanCommunication<PROTOCOL_DEF>::sendInitCommunicationRequest;
+    using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueResponse;
+    using SOTCanCommunication<PROTOCOL_DEF>::myDeviceId;
+
   public:
     /// id is the client deviceId
     std::map<uint8_t, ConnectedClient<PROTOCOL_DEF>> clients;
@@ -112,8 +120,9 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF> {
 
 
     void addAndConnectToClient(const uint8_t clientDeviceId) {
-      clients[clientDeviceId] = ConnectedClient<PROTOCOL_DEF>{};
+      auto client = clients.emplace(clientDeviceId, ConnectedClient<PROTOCOL_DEF>{});
       sendInitCommunicationRequest(clientDeviceId);
+      client.first->second.communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
     }
 
 };

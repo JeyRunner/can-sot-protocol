@@ -30,7 +30,7 @@ target_include_directories(${PROJECT_NAME}-baseLib PUBLIC src/baseLib/)
 
 ## just for dev, so that we get nice code completion for some templates
 # !! deactivate for using the library !!
-add_compile_definitions(DEV_MODE)
+target_compile_definitions(${PROJECT_NAME}-baseLib PRIVATE DEV_MODE)
 
 
 # Test for Base lib ####
