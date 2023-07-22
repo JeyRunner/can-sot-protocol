@@ -4,6 +4,7 @@ global_defs:
         OK: 0
         ERROR: 1
         DISABLED: 2
+        CONFIGURATION_PROCESS: 3
     - MOTOR_CHANGE_STATE:
         DISABLE: 0
         ENABLE: 1
@@ -52,6 +53,14 @@ object_tree:
             type: float32
             access: r
 
+      !doc
+      - name: temperature
+        type: float32
+        access: r
+        doc: # optional doc
+          unit: '°C'
+          min: 1
+
 
 
 
@@ -87,7 +96,12 @@ stream_packages:
       - "motor1.target_values.position"
       - "motor1.target_values.velocity"
 
-  - name: MotorStatus
+  - name: MotorStatusAndTemp
     direction: client_to_master
+    periodic_update: True # enable periodic updates
     data_object_tree_entries:
-      - "motor1.status"
+      - "motor1.status":
+          only_when_changed: True # just send periodic SP when at least on value marked 'only_when_changed' changes
+      - "motor1.temperature":
+          only_when_changed:
+            change_delta: 5  # this values just counts as changed when it's value changes at least 5 from the last send value

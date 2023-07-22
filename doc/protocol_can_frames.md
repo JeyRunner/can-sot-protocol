@@ -6,7 +6,8 @@ The 11 bit CAN ID field and Data of a CAN frame is split into:
 |-------------------|-----------------------|------------------------|-------------------|
 | Source Device  ID | Destination Device ID | SOT Message ID (5 bit) | ...               |
 
-For the Device ID (3 bits), 0 is reserved to the master, all other ids (1-7) are for the clients. The first 6 bit of the can frame contain the `Destination Device ID` for the device this frame is addressed to and the `Source Device ID` indicating from which device this frame is comming from.
+For the `Device ID` (3 bits), ID 0 is reserved to the master, all other IDs (1-7) are for the clients. The first 6 bit of the can frame contain the `Destination Device ID` for the device this frame is addressed to and the `Source Device ID` indicating from which device this frame is coming from.
+The `SOT Message ID` determines the type of the message/package.
 
 
 CAN Package Direction:

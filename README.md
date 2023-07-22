@@ -9,7 +9,7 @@ The whole communication structure (Object Tree and Real Time Packages) a client 
 
 ### Object Tree
 
-Clients offer an object tree, where each tree node represents a value that can be read or written from a master.
+Clients offer an object tree, where each tree node represents a value that can be __read or written from a master__.
 Tree nodes have a datatype (which can be at max 8 bytes long).
 Below you can see an example of a simple object tree:
 
@@ -65,21 +65,18 @@ while (true) {
       // ...
     }
     // reset all received flags of incoming SPs
-    // reset all received flags of incoming SPs
     canSot.SPsIncomming.ReceivedFlagsReset();
     
-    // will send all change values of OT to master (slower, with protocol overhead)
-    ot.sendAllChangedValuesToMaster()
-    
-    // OR just send a specific SP that will contain only some value(s) of the OT 
+
+    // send a specific SP that will contain only some value(s) of the OT 
     //    (e.g. some_node.some_value that we wrote before)
-    // this is faster and without overhead, will just send one can frame
+    //    without overhead, will just send one can frame
     canSot.SPsOutgoing.UpdateValue2SP.sendToMaster();
     
     // unlock after access
     ot.unlock();
     
-    // to other stuff e.g. with value2
+    // do other stuff e.g. with value2
     printf("value2: %d", value2)
 }
 ```
@@ -94,7 +91,7 @@ while (true) {
     
     // here no locking is required of object tree since all is done in one thread
     ObjectTree ot = canSot.objectTree();
-    ot.some_node.some_valueY.write(32f);
+    ot.some_node.some_valueY.write(32f); // just set value (will not send anything)
 
     // e.g. react to incoming real time packages
     if (canSot.RPTsIncomming.SetValue4.received()) {
@@ -102,16 +99,26 @@ while (true) {
     }
     // reset all received flags of incoming SPs
     canSot.SPsIncomming.ReceivedFlagsReset();
+    
+    // pull node values from a remote client
+    ot.some_node.some_valueY.sendReadReq();
+    // when value is received corresponding received flag will be set in the valueNode
+    // note that this will happen with some delay 
+    //    (earliest after next processRxTxCanPackages() call)
+    if (ot.some_node.some_valueY.recivedNewValue()) 
+    { /*...*/ }
 
     // will send all change values of OT to client (slower, with protocol overhead)
-    ot.sendAllChangedValuesToClient();
+    ot.sendAllChangedNodeValuesToClient();
     // OR send all values to client
-    ot.sendAllValuesToClient();
+    ot.sendAllNodeValuesToClient();
+    // OR send just a specific value to client
+    ot.some_node.some_valueY.sendToClient();
     
     // OR just send a specific SP that will contain only some value(s) of the OT 
     //    (e.g. some_node.some_value that we wrote before)
     // this is faster and without overhead, will just send one can frame
-    canSot.SPsOutgoing.some_valueY.sendToMaster();
+    canSot.SPsOutgoing.some_valueY.sendToClient();
 }
 ```
 
