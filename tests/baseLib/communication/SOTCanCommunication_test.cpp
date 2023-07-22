@@ -11,26 +11,44 @@
 using namespace std;
 
 
-static SOT_MESSAGE_TYPE getMessageType(CanFrame &frame) {
-    return unpackCanFrameId(frame).messageType;
+TEST_CASE("MasterClient communication: init") {
+  TestSOTMaster master;
+  TestSOTClient client;
+  CHECK(master.clients.size() == 0);
+
+  master.addAndConnectToClient(1);
+  CHECK(master.clients.size() == 1);
+  CHECK(master.clients[1].communicationState == SOT_COMMUNICATION_STATE::INITIALIZING);
+  CHECK(master.framesSend.size() == 1);
+  CHECK(master.getLastSendFrameType() == INIT_COMMUNICATION_REQUEST);
+
+  client.processCanFrameReceived(master.getLastSendFrame());
+  CHECK(client.communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
+  CHECK(client.framesSend.size() == 2);
+  CHECK(client.getSendFrameType(0) == WRITE_NODE_VALUE_REQEUST);
+  CHECK(client.getSendFrame(0).dataLength == 1 + 4);
+  CHECK(client.getSendFrame(0).data[0] == client.protocolDef.metaNodeValuesToSendOnInit[0]->nodeId);
+  CHECK(client.getSendFrameType(1) == INIT_COMMUNICATION_RESPONSE);
+
+  master.clearFramesSend();
+  master.processCanFramesReceived(client.framesSend);
+  CHECK(master.clients.size() == 1);
+  CHECK(master.clients[1].communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
+  CHECK(master.framesSend.empty());
 }
 
 
-TEST_CASE("MasterClient communication: init") {
-    TestSOTMaster master;
-    TestSOTClient client;
+TEST_CASE("MasterClient communication: master send write to client") {
+  TestSOTMaster master;
+  TestSOTClient client;
 
-    master.addAndConnectToClient(1);
-    CHECK(master.clients[1].communicationState == SOT_COMMUNICATION_STATE::INITIALIZING);
-    CHECK(master.framesSend.size() == 1);
-    CHECK(getMessageType(master.framesSend.back()) == INIT_COMMUNICATION_REQUEST);
+  master.addAndConnectToClient(1);
 
-    client.processCanFrameReceived(master.framesSend.back());
-    CHECK(client.communicationState == SOT_COMMUNICATION_STATE::INITIALIZING);
-    CHECK(client.framesSend.size() == 2);
-    CHECK(getMessageType(client.getSendFrame(0)) == WRITE_NODE_VALUE_REQEUST);
-    CHECK(client.getSendFrame(0).dataLength == 1+4);
-    CHECK(client.getSendFrame(0).data[0] == client.protocolDef.metaNodeValuesToSendOnInit[0]->nodeId);
-    CHECK(getMessageType(client.getSendFrame(1)) == INIT_COMMUNICATION_RESPONSE);
+  // set node value that is sent on init
+  client.protocolDef.objectTree.value3ThatIsSendOnInit.write(55.2);
+  client.processCanFramesReceived(master.framesSend);
 
+  master.clearFramesSend();
+  master.processCanFramesReceived(client.framesSend);
+  CHECK(master.clients[1].protocol.objectTree.value3ThatIsSendOnInit.read() == 55.2);
 }

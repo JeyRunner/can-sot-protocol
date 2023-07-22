@@ -103,7 +103,7 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF> {
     }
 
     ConnectedClient<PROTOCOL_DEF> &getClient(DeviceIdAndSOTMessageType &devIdAndType) {
-      return clients[devIdAndType.sourceDeviceId];
+      return clients.find(devIdAndType.sourceDeviceId)->second;
     }
 
 
@@ -120,7 +120,7 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF> {
 
 
     void addAndConnectToClient(const uint8_t clientDeviceId) {
-      auto client = clients.emplace(clientDeviceId, ConnectedClient<PROTOCOL_DEF>{});
+      auto client = clients.emplace(clientDeviceId, ConnectedClient<PROTOCOL_DEF>{}); // @todo seems move values on access -> references are invalid
       sendInitCommunicationRequest(clientDeviceId);
       client.first->second.communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
     }

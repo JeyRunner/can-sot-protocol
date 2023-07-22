@@ -30,6 +30,10 @@ class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
     uint8_t masterDeviceId = 0xFF;
     SOT_COMMUNICATION_STATE communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
 
+    SOTClient() = delete;
+    explicit SOTClient(uint8_t myDeviceId) {
+      this->myDeviceId = myDeviceId;
+    }
 
 
     /**
@@ -50,7 +54,7 @@ class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
           for (auto valueNode : protocolDef.metaNodeValuesToSendOnInit) {
             sendWriteNodeValueRequest(*valueNode, masterDeviceId);
           }
-          communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
+          communicationState = SOT_COMMUNICATION_STATE::INITIALIZED;
           sendInitCommunicationResponse(masterDeviceId);
           break;
         }

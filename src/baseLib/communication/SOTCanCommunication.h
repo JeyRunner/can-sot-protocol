@@ -39,9 +39,9 @@ class SOTCanCommunication {
     static bool checkPackageDataSizeForNodeId(const CanFrame &frame) {
       if (frame.dataLength < 1) {
         logError("received Can Frame data size %d bytes is smaller 1 byte (required for nodeId)", frame.dataLength);
-        return true;
+        return false;
       }
-      return false;
+      return true;
     }
 
     /**
@@ -51,9 +51,9 @@ class SOTCanCommunication {
     static bool checkPackageDataSizeForNodeValue(const CanFrame &frame, const Result<ValueNodeAbstract *> &node) {
       if (frame.dataLength < node._->getRequiredDataSizeInBytes()+1) {
         logError("received Can Frame data size %d bytes is smaller then expected %d bytes", frame.dataLength, node._->getRequiredDataSizeInBytes()+1);
-        return true;
+        return false;
       }
-      return false;
+      return true;
     }
 
 
@@ -120,9 +120,8 @@ class SOTCanCommunication {
     /**
      * Allocates a new can from to send with the given size for the data.
      */
-    virtual CanFrame& allocNewCanTxFrame(uint8_t dataSize) {
-
-    }
+    //virtual CanFrame& allocNewCanTxFrame(uint8_t dataSize) {
+    //}
 
     /**
      * Put can frame into the send buffer.

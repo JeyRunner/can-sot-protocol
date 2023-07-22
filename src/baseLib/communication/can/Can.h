@@ -9,7 +9,7 @@ struct CanData {
 
 struct CanFrame {
     /// 11 bit can Id
-    uint16_t canId;
+    uint16_t canId = 0;
     /// 0-8 bytes of data
     uint8_t *data = nullptr;
     /// number of bytes in data
