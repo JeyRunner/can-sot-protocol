@@ -24,3 +24,19 @@ std::string toString(const T (&arr)[N]) {
   ss << "]";
   return ss.str();
 }
+
+template<typename T>
+std::string byteArrayToString(const T bytes[], size_t length) {
+  std::stringstream ss;
+  ss << "";
+
+  for (size_t i = 0; i < length; ++i) {
+    ss << std::bitset<8 * sizeof(T)>(bytes[i]);
+    if (i < length - 1) {
+      ss << " ";
+    }
+  }
+
+  ss << "";
+  return ss.str();
+}

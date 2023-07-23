@@ -119,10 +119,21 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF> {
     }
 
 
-    void addAndConnectToClient(const uint8_t clientDeviceId) {
-      auto client = clients.emplace(clientDeviceId, ConnectedClient<PROTOCOL_DEF>{}); // @todo seems move values on access -> references are invalid
+    /**
+     * Add a client and connect with it.
+     * This is non-blocking (after returning from this function the connection initiation will not be finished)
+     * @param clientDeviceId
+     * @return true when the client does not exist already in the client list, and thus was added successfully.
+     */
+    bool addAndConnectToClient(const uint8_t clientDeviceId) {
+      if (clients.contains(clientDeviceId)) {
+        logError("can't add client %d since its already in the client list", clientDeviceId);
+        return false;
+      }
+      auto &client = clients[clientDeviceId]; //clients.emplace(clientDeviceId, ConnectedClient<PROTOCOL_DEF>{}); // @todo seems move values on access -> references are invalid
       sendInitCommunicationRequest(clientDeviceId);
-      client.first->second.communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
+      client.communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
+      return true;
     }
 
 };

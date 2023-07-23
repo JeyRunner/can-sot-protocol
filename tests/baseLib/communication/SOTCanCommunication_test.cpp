@@ -19,7 +19,7 @@ TEST_CASE("MasterClient communication: init") {
   master.addAndConnectToClient(1);
   CHECK(master.clients.size() == 1);
   CHECK(master.clients[1].communicationState == SOT_COMMUNICATION_STATE::INITIALIZING);
-  CHECK(master.framesSend.size() == 1);
+  REQUIRE(master.framesSend.size() == 1);
   CHECK(master.getLastSendFrameType() == INIT_COMMUNICATION_REQUEST);
 
   client.processCanFrameReceived(master.getLastSendFrame());
@@ -32,7 +32,7 @@ TEST_CASE("MasterClient communication: init") {
 
   master.clearFramesSend();
   master.processCanFramesReceived(client.framesSend);
-  CHECK(master.clients.size() == 1);
+  REQUIRE(master.clients.size() == 1);
   CHECK(master.clients[1].communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
   CHECK(master.framesSend.empty());
 }
@@ -46,9 +46,10 @@ TEST_CASE("MasterClient communication: master send write to client") {
 
   // set node value that is sent on init
   client.protocolDef.objectTree.value3ThatIsSendOnInit.write(55.2);
+  CHECK(client.protocolDef.objectTree.value3ThatIsSendOnInit.read() == doctest::Approx(55.2));
   client.processCanFramesReceived(master.framesSend);
 
   master.clearFramesSend();
   master.processCanFramesReceived(client.framesSend);
-  CHECK(master.clients[1].protocol.objectTree.value3ThatIsSendOnInit.read() == 55.2);
+  CHECK(master.clients[1].protocol.objectTree.value3ThatIsSendOnInit.read() == doctest::Approx(55.2));
 }

@@ -28,17 +28,25 @@ struct ProtocolDef {
      * These are generally read only.
      */
     ValueNodeAbstract* metaNodeValuesToSendOnInit[INIT_NODES_SIZE] = {};
+
+
+    ProtocolDef() = default;
+    ProtocolDef(const ProtocolDef&) = delete;
+    ProtocolDef(ProtocolDef&&) = delete;
+    ProtocolDef& operator=(const ProtocolDef&) = delete;
+    ProtocolDef& operator=(ProtocolDef&&) = delete;
 };
 
 
+
+
+
+/*
 template<unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE>
 struct Protocol {
     virtual ProtocolDef<OT_TABLE_SIZE,INIT_NODES_SIZE> getProtocolDef() {
     }
 };
-
-
-
 
 struct MyProtocol: public Protocol<1,1> {
     ValueNodeReadWriteable<TYPE_UINT8, 0> nodeVal1;
@@ -55,3 +63,4 @@ struct MyProtocol: public Protocol<1,1> {
       };
     }
 };
+*/

@@ -62,12 +62,13 @@ class MockCanBuffer {
     const string name;
 
     void putFrameInSendBuffer(CanFrame &frame) {
-      cout << "[" << name << "]" <<" send Frame: id: " << frame.canId << " data[0]: " << (frame.dataLength > 0 ? frame.data[0] : 0) << endl;
+      cout << "[" << name << "]" <<" send Frame with id: " << frame.canId << "  data(" << (int)frame.dataLength << "B)"
+           << (frame.dataLength > 0 ? ": " : "")
+           << byteArrayToString(frame.data, frame.dataLength) << endl;
       auto &newF = framesSend.emplace_back();
       if (frame.dataLength > 0) {
-        memcpy(newF.data, frame.data, sizeof(uint8_t)*framesSend.size());
+        memcpy(newF.data, frame.data, sizeof(uint8_t)*frame.dataLength);
       }
-
       newF.frame = CanFrame{
           .canId = frame.canId,
           .data = newF.data,
