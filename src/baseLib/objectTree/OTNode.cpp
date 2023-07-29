@@ -52,5 +52,6 @@ void ValueNodeAbstract::readFromData(const uint8_t *data) {
       break;
     }
   }
+  wasChangedEvent._triggerEvent();
 }
 

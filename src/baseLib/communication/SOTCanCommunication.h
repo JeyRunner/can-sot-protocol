@@ -5,7 +5,7 @@
 #include "SOTDefs.h"
 #include "util/Logging.h"
 #include "objectTree/ObjectTree.h"
-#include "objectTree/OTTemplate.h"
+#include "objectTree/ProtocolDef.h"
 #include "util/Result.h"
 
 #ifdef IS_MASTER_DEF
@@ -132,11 +132,18 @@ class SOTCanCommunication {
 
 public:
     /**
-     * Process Can frame from the receive buffer.
+     * Process a Can frame from the receive buffer.
      * Handle responses, writes value to OT.
      */
     virtual void processCanFrameReceived(CanFrame &frame) = 0;
 
+    /**
+     * Handle all received can frames in the can receive buffer.
+     * Handle responses, writes values to OT.
+     */
+    void processCanFrames() {
+      // @todo implement
+    }
 
 
     /**

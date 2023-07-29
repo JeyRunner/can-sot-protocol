@@ -3,7 +3,7 @@
 //#include "objectTree/OTTemplate.h"
 #include "objectTree/OTNodeValueTypeDefs.h"
 #include "objectTree/OTDeclares.h"
-#include "objectTree/OTTemplate.h"
+#include "objectTree/ProtocolDef.h"
 
 template<typename COMMUNICATION_CLASS>
 struct TestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 3,1> {
@@ -24,14 +24,14 @@ struct TestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 3,1> {
 
         } settings;
 
-    } myObjectTree;
+    } objectTree;
 
 
     /// the index is the node id belonging to the referenced node value
     OTNodeIDsTable<3> otNodeIDsTable = {
-            valueNodeAsAbstract(myObjectTree.settings.value1),
-            valueNodeAsAbstract(myObjectTree.settings.value2),
-            valueNodeAsAbstract(myObjectTree.settings.subSettings.value3),
+            valueNodeAsAbstract(objectTree.settings.value1),
+            valueNodeAsAbstract(objectTree.settings.value2),
+            valueNodeAsAbstract(objectTree.settings.subSettings.value3),
     };
 
 
@@ -40,7 +40,7 @@ struct TestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 3,1> {
      * These are generally read only.
      */
     ValueNodeAbstract *metaNodeValuesToSendOnInit[1] = {
-            valueNodeAsAbstract(myObjectTree._meta.protocolVersion),
+            valueNodeAsAbstract(objectTree._meta.protocolVersion),
     };
 
 

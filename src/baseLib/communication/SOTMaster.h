@@ -8,6 +8,7 @@
 #include "util/Logging.h"
 #include "objectTree/ObjectTree.h"
 #include "SOTCanCommunication.h"
+#include "util/EventFlag.h"
 
 template<template <class T> class PROTOCOL_DEF>
 class SOTMaster;
@@ -18,6 +19,9 @@ struct ConnectedClient {
     SOT_COMMUNICATION_STATE communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
     /// contains object tree
     PROTOCOL_DEF<ConnectedClient> protocol;
+
+    /// event flag is set when client is successfully connected to this master
+    EventFlag gotConnectedEvent;
 
     uint8_t deviceId;
     SOTMaster<PROTOCOL_DEF> *sotMaster = nullptr;
@@ -73,6 +77,7 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF> {
           auto &client = getClient(devIdAndType);
           if (client.communicationState == SOT_COMMUNICATION_STATE::INITIALIZING) {
             client.communicationState = SOT_COMMUNICATION_STATE::INITIALIZED;
+            client.gotConnectedEvent._triggerEvent();
           }
           else {
             logWarn("Got INIT_COMMUNICATION_RESPONSE although currently not in SENT_INITIALIZATION_REQUEST state");

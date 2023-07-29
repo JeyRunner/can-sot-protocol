@@ -3,6 +3,7 @@
 #include <cinttypes>
 #include "OTNodeValueTypes.h"
 #include "communication/can/Can.h"
+#include "util/EventFlag.h"
 
 
 using NodeId = uint8_t;
@@ -31,8 +32,13 @@ class ValueNodeAbstract {
     VALUE_NODE_DATA_TYPES dataType;
     //PROTOCOL_DEF &protocol;
 
-  public:
+    /**
+     * This event flag will be set to true after the value of this node was changed by the remote master or client.
+     * This happens when a write-request or read-response package is received.
+     */
+    EventFlag wasChangedEvent;
 
+  public:
     const uint8_t getRequiredDataSizeInBytes() const;
 
     /**
@@ -51,6 +57,7 @@ class ValueNodeAbstract {
     /**
      * Read value from data of a can frame.
      * This will overwrite the current value of the node.
+     * This will also set the wasChangedEvent to true.
      */
     void readFromData(const uint8_t *data);
 

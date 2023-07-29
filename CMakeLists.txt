@@ -32,7 +32,7 @@ target_link_libraries(${PROJECT_NAME}-baseLib PRIVATE etl::etl)
 
 ## just for dev, so that we get nice code completion for some templates
 # !! deactivate for using the library !!
-target_compile_definitions(${PROJECT_NAME}-baseLib PRIVATE DEV_MODE)
+#target_compile_definitions(${PROJECT_NAME}-baseLib PRIVATE DEV_MODE)
 
 
 # Test for Base lib ####
@@ -41,3 +41,8 @@ add_executable(${PROJECT_NAME}-baseLib-tests ${baseLibHeaders} ${baseLibSrc} ${b
 #target_compile_features(${PROJECT_NAME}-baseLib-tests PRIVATE cxx_std_17)
 target_include_directories(${PROJECT_NAME}-baseLib-tests PUBLIC src/baseLib/ "${CMAKE_CURRENT_SOURCE_DIR}/tests/testUtil/")
 target_link_libraries(${PROJECT_NAME}-baseLib-tests PRIVATE etl::etl doctest::doctest )
+
+
+
+## Example applications ######
+include(example/master-linux/CMakeLists.txt)
