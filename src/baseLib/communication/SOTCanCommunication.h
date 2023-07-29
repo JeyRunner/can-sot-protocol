@@ -26,10 +26,10 @@ enum class SOT_COMMUNICATION_STATE {
 //template<class PROTOCOL_DEF> requires ProtocolDefType<PROTOCOL_DEF, 1>
 template<class PROTOCOL_DEF = Protocol<1,1>>
 #else
-template<class PROTOCOL_DEF>
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/>
 #endif
 class SOTCanCommunication {
-  public:
+  protected:
     uint8_t myDeviceId = 0;
 
     /**
@@ -48,13 +48,14 @@ class SOTCanCommunication {
      * check received frame data size depending on data type of the node
      * @return true if ok
      */
-    static bool checkPackageDataSizeForNodeValue(const CanFrame &frame, const Result<ValueNodeAbstract *> &node) {
+    static bool checkPackageDataSizeForNodeValue(const CanFrame &frame, const Result<ValueNodeAbstract*> &node) {
       if (frame.dataLength < node._->getRequiredDataSizeInBytes()+1) {
         logError("received Can Frame data size %d bytes is smaller then expected %d bytes", frame.dataLength, node._->getRequiredDataSizeInBytes()+1);
         return false;
       }
       return true;
     }
+
 
 
     void sendInitCommunicationRequest(uint8_t targetDeviceId) {
@@ -65,6 +66,8 @@ class SOTCanCommunication {
       sendMessage(SOT_MESSAGE_TYPE::INIT_COMMUNICATION_RESPONSE, targetDeviceId, nullptr, 0);
     }
 
+
+
     void sendWriteNodeValueRequest(ValueNodeAbstract &valueNode, uint8_t targetDeviceId) {
       uint8_t dataSize = valueNode.getRequiredDataSizeInBytes() + 1; // first byte for nodeId
       uint8_t data[dataSize];
@@ -73,13 +76,24 @@ class SOTCanCommunication {
       sendMessage(SOT_MESSAGE_TYPE::WRITE_NODE_VALUE_REQEUST, targetDeviceId, data, dataSize);
     }
 
-    void sendReadNodeValueResponse(ValueNodeAbstract *valueNode, uint8_t targetDeviceId) {
-      uint8_t dataSize = valueNode->getRequiredDataSizeInBytes() + 1; // first byte for nodeId
+
+
+    void sendReadNodeValueRequest(ValueNodeAbstract &valueNode, uint8_t targetDeviceId) {
+        uint8_t dataSize = 1; // first byte for nodeId
+        uint8_t data[dataSize];
+        data[0] = valueNode.nodeId;
+        valueNode.writeToData(&data[1]);
+        sendMessage(SOT_MESSAGE_TYPE::READ_NODE_VALUE_REQEUST, targetDeviceId, data, dataSize);
+    }
+
+    void sendReadNodeValueResponse(ValueNodeAbstract &valueNode, uint8_t targetDeviceId) {
+      uint8_t dataSize = valueNode.getRequiredDataSizeInBytes() + 1; // first byte for nodeId
       uint8_t data[dataSize];
-      data[0] = valueNode->nodeId;
-      valueNode->writeToData(&data[1]);
+      data[0] = valueNode.nodeId;
+      valueNode.writeToData(&data[1]);
       sendMessage(SOT_MESSAGE_TYPE::READ_NODE_VALUE_RESPONSE, targetDeviceId, data, dataSize);
     }
+
 
 
     void sendMessage(SOT_MESSAGE_TYPE type, uint8_t targetDeviceId, uint8_t *data, uint8_t dataSize) {
@@ -110,6 +124,14 @@ class SOTCanCommunication {
 
 
     /**
+     * Put can frame into the send buffer.
+     */
+    virtual void canSendFrame(CanFrame &frame) {
+
+    }
+
+public:
+    /**
      * Process Can frame from the receive buffer.
      * Handle responses, writes value to OT.
      */
@@ -122,11 +144,4 @@ class SOTCanCommunication {
      */
     //virtual CanFrame& allocNewCanTxFrame(uint8_t dataSize) {
     //}
-
-    /**
-     * Put can frame into the send buffer.
-     */
-    virtual void canSendFrame(CanFrame &frame) {
-
-    }
 };

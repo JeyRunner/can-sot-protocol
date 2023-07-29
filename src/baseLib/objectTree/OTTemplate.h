@@ -3,19 +3,27 @@
 #include "objectTree/OTNodeValueTypes.h"
 #include "objectTree/OTDeclares.h"
 
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/>
+class SOTCanCommunication;
+
+
 // if C++20
 #if __cplusplus > 201703L
 #include <concepts> // std::same_as
-
+/*
 template <typename T, uint8_t OT_TABLE_SIZE>
 concept ProtocolDefType = requires(T) {
   {T::objectTree} -> std::same_as<OTNodeIDsTable<OT_TABLE_SIZE>>;
   {T::metaNodeValuesToSendOnInit} -> std::same_as<ValueNodeAbstract*[]>;
 };
+ */
 #endif
 
 
-template<unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE>
+/**
+ * Generated protocols will extend from this class,
+ */
+template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE>
 struct ProtocolDef {
     uint8_t otTableSize = OT_TABLE_SIZE;
 
@@ -30,12 +38,44 @@ struct ProtocolDef {
     ValueNodeAbstract* metaNodeValuesToSendOnInit[INIT_NODES_SIZE] = {};
 
 
-    ProtocolDef() = default;
+    COMMUNICATION_CLASS &sotCanCommunication;
+
+
+    /**
+     * Send value of value node to the remote master or client.
+     * This will add the corresponding send package into the can send buffer.
+     */
+    inline void sendValue(ValueNodeAbstract &vNode) {
+        sotCanCommunication.sendValue(vNode);
+    }
+
+    /**
+     * Send a request for reading the current value of this node from a remote client or server.
+     * When the new read value arrives it will directly overwrite the current value of this node.
+     * This will put the corresponding can frame directly into the can send buffer.
+     * @note it will take time for the new value to arrive, so the new value will not be immediately available.
+     */
+    inline void sendReadValueReq(ValueNodeAbstract &vNode) {
+        sotCanCommunication.sendReadValueReq(vNode);
+    }
+
+
+    ProtocolDef() = delete;
+    //ProtocolDef(int i, COMMUNICATION_CLASS *sotCanCommunication)
+    //: sotCanCommunication(*sotCanCommunication) {};
+    ProtocolDef(COMMUNICATION_CLASS *sotCanCommunication)
+            : sotCanCommunication(*sotCanCommunication) {};
     ProtocolDef(const ProtocolDef&) = delete;
     ProtocolDef(ProtocolDef&&) = delete;
     ProtocolDef& operator=(const ProtocolDef&) = delete;
     ProtocolDef& operator=(ProtocolDef&&) = delete;
 };
+
+
+/// just used for testing
+template<typename COMMUNICATION_CLASS>
+struct _DummpProtocl: public ProtocolDef<COMMUNICATION_CLASS, 0, 0>
+{};
 
 
 

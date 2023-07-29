@@ -19,7 +19,7 @@ CAN Package Direction:
 ## General Communication Flow
 
 This is an example for a typical communication flow. <br/>
-Here the client offers a `tmp_request_value` called `mode.requestMode` to activate streaming of some sensor data (there is code on the  cilent to do that). This will change the clients `currentStatus` value.
+Here the client offers a `tmp_request_value` called `mode.requestMode` to activate streaming of some sensor data (there is code on the  client to do that). This will change the clients `currentStatus` value.
 
 ```mermaid
 sequenceDiagram
@@ -35,7 +35,7 @@ sequenceDiagram
 
     Note over Master,Client: _<br/> Now a 'tmp_request_value' may be used <br/> to activate some mode on the client:
     Master->>Client: Write Node Value Request ("mode.requestMode": MODE_RUNNING)
-    Client->>Master: Write Node Request Value Respons (OK)
+    Client->>Master: Write Node Request Value Response (OK)
     Client->>Master: Write Node Value Request ("currentStatus": STATUS_RUNNING)
     Note over Master,Client: Now the clients start streaming some sensor data:
     Client->>Master: Stream Package (SensorDataSP)
@@ -48,10 +48,10 @@ sequenceDiagram
 
 This is the first exchanged message (from master to client). <br/>
 After receiving this message, the client will first send all its `_meta` information of the OT to the master (via Write Node Value Requests).
-After the client is finished with sending all values in `_meta`, it will respond with a Init Communication Response.
+After the client is finished with sending all values in `_meta`, it will respond with an Init Communication Response.
 
 | SOT Message ID (5 bit) | Data 0 byte |
-| ---------------------- | ----------- |
+|------------------------|-------------|
 | 0b00'0000              |             |
 
 #### Init Communication Response  &ensp; 🎚️ ➡️ 🖥
@@ -59,7 +59,7 @@ After the client is finished with sending all values in `_meta`, it will respond
 This is the response of the client to the masters Init Communication Request (from client to master).
 
 | SOT Message ID (5 bit) | Data 1 byte                                                                  |
-| ---------------------- | ---------------------------------------------------------------------------- |
+|------------------------|------------------------------------------------------------------------------|
 | 0b00'0001              | `0` if communication is accepted.<br/> `1` if communication is not accepted. |
 
 #### Communication Error  &ensp; 🖥️ 🔄 🎚
@@ -67,7 +67,7 @@ This is the response of the client to the masters Init Communication Request (fr
 On device sends this to the other device its communicating with to indicate there is a general communication error/problem.
 
 | SOT Message ID (5 bit) | Data 1 byte                                                                                        |
-| ---------------------- | -------------------------------------------------------------------------------------------------- |
+|------------------------|----------------------------------------------------------------------------------------------------|
 | 0b00'0010              | `0` Receive Buffer Overflow (other sending device should slow down).<br/> `1` Send Buffer Overflow |
 
 ## Object Directory Read / Write
@@ -78,24 +78,24 @@ Works in both directions from master to client and the other way.
 
 #### Write Node Value Request  &ensp; 🖥️ 🔄 🎚️️
 
-| SOT Message ID (5 bit) | Data 1 byte   | Data 1-7 bytes                                |
-| ---------------------- |---------------| --------------------------------------------- |
+| SOT Message ID (5 bit) | Data 1 byte    | Data 1-7 bytes                                |
+|------------------------|----------------|-----------------------------------------------|
 | 0b00'0100              | Object Node ID | Object Node Value (size depends on data type) |
 
 #### Write Node Value Ack *  &ensp; 🖥️ 🔄 🎚️️
 
 Acknowledge is sent after Write Node Value Request was received (Note, that this is currently not implemented).
 
-| SOT Message ID (5 bit) | Data 1 byte     |
-| ---------------------- |-----------------|
-| 0b00'0101              | Object Node ID  |
+| SOT Message ID (5 bit) | Data 1 byte    |
+|------------------------|----------------|
+| 0b00'0101              | Object Node ID |
 
 #### Write Node Request Value Response  &ensp; 🖥️ 🔄 🎚️️
 
 When a node value was written (via Write Node Value Request) that is declared as `is_tmp_request_value: true`, this response message is send back by node that received the write request.
 
-| SOT Message ID (5 bit) | Data 1 byte   | Data 1 byte                                                                |
-| ---------------------- |---------------|----------------------------------------------------------------------------|
+| SOT Message ID (5 bit) | Data 1 byte    | Data 1 byte                                                                |
+|------------------------|----------------|----------------------------------------------------------------------------|
 | 0b00'0110              | Object Node ID | `0` if write was accepted by receiver.<br/> `1` if write was not accepted. |
 
 ### Read
@@ -103,7 +103,7 @@ When a node value was written (via Write Node Value Request) that is declared as
 #### Read Node Value Request  &ensp; 🖥️ 🔄 🎚️️
 
 | SOT Message ID (5 bit) | Data 1 byte    |
-| ---------------------- |----------------|
+|------------------------|----------------|
 | 0b00'1000              | Object Node ID |
 
 #### Read Node Value Response  &ensp; 🖥️ 🔄 🎚️️
@@ -111,7 +111,7 @@ When a node value was written (via Write Node Value Request) that is declared as
 Response is sent after Write Node Value Request was received.
 
 | SOT Message ID (5 bit) | Data 1 byte    | Data 1-7 bytes                                |
-| ---------------------- | -------------- | --------------------------------------------- |
+|------------------------|----------------|-----------------------------------------------|
 | 0b00'1001              | Object Node ID | Object Node Value (size depends on data type) |
 
 ## Stream Packages

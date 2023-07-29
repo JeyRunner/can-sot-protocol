@@ -124,9 +124,10 @@ while (true) {
 
 
 
-#### Implementation Status
+### Implementation Status
 
-| Type   | Platform        | Status      |
-| ------ | --------------- |-------------|
-| master | linux/socketCAN | ✍🏻 planned |
-| client | esp32           | ✍🏻 planned |
+| Type   | Platform          | Status      |
+|--------|-------------------|-------------|
+| master | linux [`socketCAN`] | ✍🏻 planned |
+| client | esp32 [`ESP-IDF`]   | ✍🏻 planned |
+| client | stm32 [`STM32 HAL`] | ✍🏻 planned |

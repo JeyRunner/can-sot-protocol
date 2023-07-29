@@ -22,12 +22,14 @@ class Node {
 };
 
 
+//template<class PROTOCOL_DEF>
 class ValueNodeAbstract {
   public:
-    ValueNodeAbstract(NodeId nodeId) : nodeId(nodeId) {};
+    ValueNodeAbstract(NodeId nodeId/*, PROTOCOL_DEF &protocol*/) : nodeId(nodeId) /*, protocol(protocol)*/ {};
   public: // protected
     NodeId nodeId;
     VALUE_NODE_DATA_TYPES dataType;
+    //PROTOCOL_DEF &protocol;
 
   public:
 
@@ -60,22 +62,37 @@ class ValueNodeAbstract {
     void readFromData(CanData<SIZE> data) {
       readFromData(data);
     }
+
+    /**
+     * Send the current value to the remote client or server.
+     * This will put the corresponding can frame directly into the can send buffer.
+     */
+    //void sendValue() {
+    //}
+
+    /**
+     * Send a request for reading the current value of this node from a remote client or server.
+     * When the new read value arrives it will directly overwrite the current value of this node.
+     * This will put the corresponding can frame directly into the can send buffer.
+     * @note it will take time for the new value to arrive, so the new value will not be immediately available
+     */
+    //void sendReadRequest();
 };
 
 
 
 
 // -- Value Types --------------------------------------------
-template<class TYPE>
-class ValueNodeTypeAbstract: public ValueNodeAbstract {
+template<class TYPE/*, class PROTOCOL_DEF*/>
+class ValueNodeTypeAbstract: public ValueNodeAbstract/*<PROTOCOL_DEF>*/ {
   public:
-    ValueNodeTypeAbstract(NodeId nodeId) : ValueNodeAbstract(nodeId) {
-      dataType = getValueNoteDataType<TYPE>();
+    ValueNodeTypeAbstract(NodeId nodeId/*, PROTOCOL_DEF protocol*/) : ValueNodeAbstract/*<PROTOCOL_DEF>*/(nodeId /*, protocol*/) {
+      this->dataType = getValueNoteDataType<TYPE>();
     };
 
   public: // protected
     TYPE value;
-    friend ValueNodeAbstract;
+    friend ValueNodeAbstract/*<PROTOCOL_DEF>*/;
 };
 
 

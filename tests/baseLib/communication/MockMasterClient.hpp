@@ -78,7 +78,7 @@ class MockCanBuffer {
 };
 
 
-class TestSOTMaster: public SOTMaster<TestProtocol>, public MockCanBuffer {
+class TestSOTMaster: public SOTMaster<MockTestProtocol>, public MockCanBuffer {
 public:
     explicit TestSOTMaster(): MockCanBuffer("Master")
     {}
@@ -95,9 +95,11 @@ public:
 };
 
 
-class TestSOTClient: public SOTClient<TestProtocol>, public MockCanBuffer {
+class TestSOTClient: public SOTClient<MockTestProtocol>, public MockCanBuffer {
 public:
-    explicit TestSOTClient(): MockCanBuffer("Client"), SOTClient<TestProtocol>(1)
+    using SOTClient<MockTestProtocol>::communicationState;
+
+    explicit TestSOTClient(): MockCanBuffer("Client"), SOTClient<MockTestProtocol>(1)
     {}
 
     void canSendFrame(CanFrame &frame) override {

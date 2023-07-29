@@ -1,4 +1,4 @@
-#include <doctest/doctest.h>
+#include "DocTestIncl.h"
 #include <cstring>
 #include "communication/SOTMaster.h"
 #include "communication/SOTClient.h"
@@ -14,11 +14,11 @@ using namespace std;
 TEST_CASE("MasterClient communication: init") {
   TestSOTMaster master;
   TestSOTClient client;
-  CHECK(master.clients.size() == 0);
+  CHECK(master.getClients().size() == 0);
 
   master.addAndConnectToClient(1);
-  CHECK(master.clients.size() == 1);
-  CHECK(master.clients[1].communicationState == SOT_COMMUNICATION_STATE::INITIALIZING);
+  CHECK(master.getClients().size() == 1);
+  CHECK(master.getClient(1).communicationState == SOT_COMMUNICATION_STATE::INITIALIZING);
   REQUIRE(master.framesSend.size() == 1);
   CHECK(master.getLastSendFrameType() == INIT_COMMUNICATION_REQUEST);
 
@@ -27,29 +27,94 @@ TEST_CASE("MasterClient communication: init") {
   CHECK(client.framesSend.size() == 2);
   CHECK(client.getSendFrameType(0) == WRITE_NODE_VALUE_REQEUST);
   CHECK(client.getSendFrame(0).dataLength == 1 + 4);
-  CHECK(client.getSendFrame(0).data[0] == client.protocolDef.metaNodeValuesToSendOnInit[0]->nodeId);
+  CHECK(client.getSendFrame(0).data[0] == client.getProtocol().metaNodeValuesToSendOnInit[0]->nodeId);
   CHECK(client.getSendFrameType(1) == INIT_COMMUNICATION_RESPONSE);
 
   master.clearFramesSend();
   master.processCanFramesReceived(client.framesSend);
-  REQUIRE(master.clients.size() == 1);
-  CHECK(master.clients[1].communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
+  REQUIRE(master.getClients().size() == 1);
+  CHECK(master.getClient(1).communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
   CHECK(master.framesSend.empty());
 }
 
 
-TEST_CASE("MasterClient communication: master send write to client") {
+TEST_CASE("MasterClient communication: client send initValues to master") {
   TestSOTMaster master;
   TestSOTClient client;
 
   master.addAndConnectToClient(1);
 
   // set node value that is sent on init
-  client.protocolDef.objectTree.value3ThatIsSendOnInit.write(55.2);
-  CHECK(client.protocolDef.objectTree.value3ThatIsSendOnInit.read() == doctest::Approx(55.2));
+  client.getProtocol().objectTree.value3ThatIsSendOnInit.write(55.2);
+  CHECK(client.getProtocol().objectTree.value3ThatIsSendOnInit.read() == doctest::Approx(55.2));
   client.processCanFramesReceived(master.framesSend);
 
   master.clearFramesSend();
   master.processCanFramesReceived(client.framesSend);
-  CHECK(master.clients[1].protocol.objectTree.value3ThatIsSendOnInit.read() == doctest::Approx(55.2));
+  CHECK(master.getClient(1).protocol.objectTree.value3ThatIsSendOnInit.read() == doctest::Approx(55.2));
+}
+
+
+TEST_CASE("MasterClient communication: master send read request to client") {
+  TestSOTMaster master;
+  TestSOTClient client;
+
+  // connect
+  master.addAndConnectToClient(1);
+  auto &masterProtocol = master.getClient(1).protocol;
+  client.processCanFramesReceived(master.framesSend);
+  master.processCanFramesReceived(client.framesSend);
+  client.clearFramesSend();
+  master.clearFramesSend();
+
+  // change value on client
+  client.getProtocol().objectTree.settings.value2.write(27);
+
+  // master reads value client master
+  masterProtocol.sendReadValueReq(masterProtocol.objectTree.settings.value2);
+  REQUIRE(master.framesSend.size() == 1);
+  CHECK(master.getLastSendFrameType() == READ_NODE_VALUE_REQEUST);
+
+  // let client answer
+  client.processCanFramesReceived(master.framesSend);
+  REQUIRE(client.framesSend.size() == 1);
+  CHECK(client.getLastSendFrameType() == READ_NODE_VALUE_RESPONSE);
+  master.clearFramesSend();
+
+  // master process packages
+  master.processCanFramesReceived(client.framesSend);
+  REQUIRE(master.framesSend.size() == 0);
+
+
+  CHECK(masterProtocol.objectTree.settings.value2.read() == 27);
+}
+
+
+
+
+TEST_CASE("MasterClient communication: master send write request to client") {
+  TestSOTMaster master;
+  TestSOTClient client;
+
+  // connect
+  master.addAndConnectToClient(1);
+  auto &masterProtocol = master.getClient(1).protocol;
+  client.processCanFramesReceived(master.framesSend);
+  master.processCanFramesReceived(client.framesSend);
+  client.clearFramesSend();
+  master.clearFramesSend();
+
+  // change value on master
+  masterProtocol.objectTree.settings.value1.write(27);
+
+  // master sends value to client
+  masterProtocol.sendValue(masterProtocol.objectTree.settings.value1);
+  REQUIRE(master.framesSend.size() == 1);
+  CHECK(master.getLastSendFrameType() == WRITE_NODE_VALUE_REQEUST);
+
+  // let client answer
+  client.processCanFramesReceived(master.framesSend);
+  REQUIRE(client.framesSend.size() == 0);
+
+  CHECK(client.getProtocol().objectTree.settings.value1.read() == 27);
 }

@@ -11,27 +11,31 @@
 
 
 #ifdef DEV_MODE
-using PROTOCOL_DEF = ProtocolDef<1,1>; // just dummy value to get code autocompletion
+using PROTOCOL_DEF = ProtocolDef<_DummpProtocl, 1,1>; // just dummy value to get code autocompletion
 //template<class PROTOCOL_DEF> requires ProtocolDefType<PROTOCOL_DEF, 1>
 #else
-template<class PROTOCOL_DEF = ProtocolDef<1,1>>
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/>
 #endif
 class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
     using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeId;
     using SOTCanCommunication<PROTOCOL_DEF>::sendInitCommunicationResponse;
     using SOTCanCommunication<PROTOCOL_DEF>::sendWriteNodeValueRequest;
     using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeValue;
+    using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueRequest;
     using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueResponse;
+    using PROTOCOL = PROTOCOL_DEF<SOTClient<PROTOCOL_DEF>>;
 
-  public:
+  protected:
     /// contains the object tree
-    PROTOCOL_DEF protocolDef;
+    PROTOCOL protocolDef;
 
     uint8_t masterDeviceId = 0xFF;
     SOT_COMMUNICATION_STATE communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
 
+
+public:
     SOTClient() = delete;
-    explicit SOTClient(uint8_t myDeviceId) {
+    explicit SOTClient(uint8_t myDeviceId): protocolDef(this) {
       this->myDeviceId = myDeviceId;
     }
 
@@ -77,7 +81,7 @@ class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
           RETURN_IF_FALSE(checkPackageDataSizeForNodeId(frame));
           auto node = getValueNodeById(frame.data[0]);
           RESULT_WHEN_ERR_RETURN(node);
-          sendReadNodeValueResponse(node._, masterDeviceId);
+          sendReadNodeValueResponse(*node._, masterDeviceId);
           break;
         }
         case READ_NODE_VALUE_RESPONSE: {
@@ -106,7 +110,14 @@ class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
     }
 
 
+    /**
+     * Use this function to access the object tree and SP of the protocol managed by this client.
+     */
+    PROTOCOL &getProtocol() {
+      return protocolDef;
+    }
 
+protected:
     Result<ValueNodeAbstract*> getValueNodeById(uint8_t id) {
       if (id > protocolDef.otTableSize) {
         logWarn("Accessed NodeId %d does not exist", id);
@@ -117,4 +128,13 @@ class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
       }
     }
 
+
+private:
+    inline void sendValue(ValueNodeAbstract &vNode) {
+        sendWriteNodeValueRequest(vNode, masterDeviceId);
+    }
+
+    inline void sendValueNodeRead(ValueNodeAbstract &vNode) {
+        sendReadNodeValueRequest(&vNode, masterDeviceId);
+    }
 };

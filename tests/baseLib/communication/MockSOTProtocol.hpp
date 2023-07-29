@@ -11,7 +11,8 @@
 using namespace std;
 
 /// Mock protocol, here just for testing the same struct is used for client and master
-struct TestProtocol: public ProtocolDef<2,2> {
+template<typename COMMUNICATION_CLASS>
+struct MockTestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 2,2> {
 
     struct MyObjectTree: public Node {
         struct Settings: Node {
@@ -39,4 +40,8 @@ struct TestProtocol: public ProtocolDef<2,2> {
     ValueNodeAbstract* metaNodeValuesToSendOnInit[1] = {
             valueNodeAsAbstract(objectTree.value3ThatIsSendOnInit)
     };
+
+
+    explicit MockTestProtocol(COMMUNICATION_CLASS *sotCanCommunication)
+    : ProtocolDef<COMMUNICATION_CLASS, 2, 2>(sotCanCommunication) {};
 };
