@@ -5,25 +5,26 @@
 #include "objectTree/OTDeclares.h"
 #include "objectTree/ProtocolDef.h"
 
-template<typename COMMUNICATION_CLASS>
-struct TestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 3,1> {
+template<typename COMC>
+struct TestProtocol: public ProtocolDef<COMC, 3,1> {
     struct MyObjectTree : public Node {
         struct _Meta : Node {
-            ValueNodeReadable<TYPE_UINT8, 0> protocolVersion;
+            ValueNodeReadable<TYPE_UINT8, 0, COMC> protocolVersion;
         } _meta;
 
         struct Settings : Node {
-            ValueNodeReadable<TYPE_UINT16, 1> value1;
-            ValueNodeReadable<TYPE_UINT16, 2> value2;
+            ValueNodeReadable<TYPE_UINT16, 1, COMC> value1;
+            ValueNodeReadable<TYPE_UINT16, 2, COMC> value2;
 
             //ValueNodeReadable<long, 0> testShouldNotCompile; /// should not compile
 
             struct SubSettings : Node {
-                ValueNodeReadable<TYPE_F32, 0> value3;
+                ValueNodeReadable<TYPE_F32, 0, COMC> value3;
             } subSettings;
 
         } settings;
 
+        //ValueNodeTypeAbstractWithProt<TYPE_F32, COMC> testNode = 1;
     } objectTree;
 
 
@@ -44,6 +45,13 @@ struct TestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 3,1> {
     };
 
 
-    explicit TestProtocol(COMMUNICATION_CLASS *sotCanCommunication)
-    : ProtocolDef<COMMUNICATION_CLASS, 3,1>(sotCanCommunication) {};
+    explicit TestProtocol(COMC *sotCanCommunication)
+    : ProtocolDef<COMC, 3,1>(sotCanCommunication) {
+        // setup all nodevalues
+        //valueNodeTypeAbstractWithProt_setProtocolRef(objectTree.testNode, sotCanCommunication);
+        //objectTree.testNode.__setProtocolRef(sotCanCommunication);
+        objectTree._meta.protocolVersion.__setProtocolRef(sotCanCommunication);
+        objectTree.settings.value1.__setProtocolRef(sotCanCommunication);
+        objectTree.settings.value2.__setProtocolRef(sotCanCommunication);
+    };
 };

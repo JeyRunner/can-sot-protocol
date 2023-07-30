@@ -50,13 +50,12 @@ int main(int argc, const char **argv) {
       cout << "client with id " << args_clientDeviceId << " got successfully connected" << endl;
 
       // read some value from client
-      sotClient.protocol.sendReadValueReq(sotClient.protocol.objectTree.settings.value1);
+      sotClient.protocol.objectTree.settings.value1.sendReadValueReq();
     }
 
 
     // when received new value from remote client
-    if (sotClient.protocol.objectTree.settings.value1.wasChangedEvent) {
-      sotClient.protocol.objectTree.settings.value1.wasChangedEvent.clear();
+    if (sotClient.protocol.objectTree.settings.value1.receivedValueUpdate.checkAndReset()) {
       cout << "got value from client: settings.value1 = " << sotClient.protocol.objectTree.settings.value1.read() << endl;
     }
 

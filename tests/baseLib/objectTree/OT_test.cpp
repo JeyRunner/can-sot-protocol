@@ -1,6 +1,8 @@
 #include "DocTestIncl.h"
 #include "objectTree/OTNode.h"
 #include "objectTree/OTNodeValueTypeDefs.h"
+#include "communication/SOTClient.h"
+#include "_example_generated_ot/SOTProtocol.hpp"
 
 #include "TestUtil.h"
 
@@ -33,8 +35,8 @@ TEST_CASE("test ValueNodeTypeAbstract") {
 
 template<class TYPE> static void testObjectValueWriteRead(TYPE value) {
   uint8_t data[8] = {0};
-  ValueNodeReadWriteable<TYPE, 0> valueNode;
-  ValueNodeReadWriteable<TYPE, 0> valueNode2;
+  ValueNodeReadWriteable<TYPE, 0, SOTClient<TestProtocol>> valueNode;
+  ValueNodeReadWriteable<TYPE, 0, SOTClient<TestProtocol>> valueNode2;
   valueNode.write(value);
   CHECK(valueNode.read() == value);
 

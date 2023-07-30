@@ -76,26 +76,27 @@ TEST_CASE("MasterClient communication: master send read request to client") {
   client.getProtocol().objectTree.settings.value2.write(27);
 
   // master reads value client master
-  masterProtocol.sendReadValueReq(masterProtocol.objectTree.settings.value2);
+  masterProtocol.objectTree.settings.value2.sendReadValueReq();
+  // OR: masterProtocol.sendReadValueReq(masterProtocol.objectTree.settings.value2);
   REQUIRE(master.framesSend.size() == 1);
   CHECK(master.getLastSendFrameType() == READ_NODE_VALUE_REQEUST);
-  CHECK_FALSE(masterProtocol.objectTree.settings.value1.wasChangedEvent);
-  CHECK_FALSE(masterProtocol.objectTree.settings.value2.wasChangedEvent);
+  CHECK_FALSE(masterProtocol.objectTree.settings.value1.receivedValueUpdate);
+  CHECK_FALSE(masterProtocol.objectTree.settings.value2.receivedValueUpdate);
 
   // let client answer
   client.processCanFramesReceived(master.framesSend);
   REQUIRE(client.framesSend.size() == 1);
   CHECK(client.getLastSendFrameType() == READ_NODE_VALUE_RESPONSE);
-  CHECK_FALSE(client.getProtocol().objectTree.settings.value1.wasChangedEvent);
-  CHECK_FALSE(client.getProtocol().objectTree.settings.value2.wasChangedEvent);
+  CHECK_FALSE(client.getProtocol().objectTree.settings.value1.receivedValueUpdate);
+  CHECK_FALSE(client.getProtocol().objectTree.settings.value2.receivedValueUpdate);
   master.clearFramesSend();
 
   // master process packages
   master.processCanFramesReceived(client.framesSend);
   REQUIRE(master.framesSend.size() == 0);
 
-  CHECK_FALSE(masterProtocol.objectTree.settings.value1.wasChangedEvent);
-  CHECK(masterProtocol.objectTree.settings.value2.wasChangedEvent);
+  CHECK_FALSE(masterProtocol.objectTree.settings.value1.receivedValueUpdate);
+  CHECK(masterProtocol.objectTree.settings.value2.receivedValueUpdate);
   CHECK(masterProtocol.objectTree.settings.value2.read() == 27);
 }
 
@@ -114,14 +115,14 @@ TEST_CASE("MasterClient communication: master send write request to client") {
   client.clearFramesSend();
   master.clearFramesSend();
 
-  CHECK_FALSE(client.getProtocol().objectTree.settings.value1.wasChangedEvent);
-  CHECK_FALSE(client.getProtocol().objectTree.settings.value2.wasChangedEvent);
+  CHECK_FALSE(client.getProtocol().objectTree.settings.value1.receivedValueUpdate);
+  CHECK_FALSE(client.getProtocol().objectTree.settings.value2.receivedValueUpdate);
 
   // change value on master
   masterProtocol.objectTree.settings.value1.write(27);
 
   // master sends value to client
-  masterProtocol.sendValue(masterProtocol.objectTree.settings.value1);
+  masterProtocol.objectTree.settings.value1.sendValue();
   REQUIRE(master.framesSend.size() == 1);
   CHECK(master.getLastSendFrameType() == WRITE_NODE_VALUE_REQEUST);
 
@@ -129,7 +130,7 @@ TEST_CASE("MasterClient communication: master send write request to client") {
   client.processCanFramesReceived(master.framesSend);
   REQUIRE(client.framesSend.size() == 0);
 
-  CHECK(client.getProtocol().objectTree.settings.value1.wasChangedEvent);
-  CHECK_FALSE(client.getProtocol().objectTree.settings.value2.wasChangedEvent);
+  CHECK(client.getProtocol().objectTree.settings.value1.receivedValueUpdate);
+  CHECK_FALSE(client.getProtocol().objectTree.settings.value2.receivedValueUpdate);
   CHECK(client.getProtocol().objectTree.settings.value1.read() == 27);
 }

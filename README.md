@@ -101,11 +101,11 @@ while (true) {
     canSot.SPsIncomming.ReceivedFlagsReset();
     
     // pull node values from a remote client
-    ot.some_node.some_valueY.sendReadReq();
+    ot.some_node.some_valueY.sendReadValueReq();
     // when value is received corresponding received flag will be set in the valueNode
     // note that this will happen with some delay 
     //    (earliest after next processRxTxCanPackages() call)
-    if (ot.some_node.some_valueY.recivedNewValue()) 
+    if (ot.some_node.some_valueY.receivedValueUpdate.checkAndReset()) 
     { /*...*/ }
 
     // will send all change values of OT to client (slower, with protocol overhead)
@@ -113,7 +113,7 @@ while (true) {
     // OR send all values to client
     ot.sendAllNodeValuesToClient();
     // OR send just a specific value to client
-    ot.some_node.some_valueY.sendToClient();
+    ot.some_node.some_valueY.sendValue();
     
     // OR just send a specific SP that will contain only some value(s) of the OT 
     //    (e.g. some_node.some_value that we wrote before)

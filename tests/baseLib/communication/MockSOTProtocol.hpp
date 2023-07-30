@@ -11,15 +11,15 @@
 using namespace std;
 
 /// Mock protocol, here just for testing the same struct is used for client and master
-template<typename COMMUNICATION_CLASS>
-struct MockTestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 2,2> {
+template<typename COMC>
+struct MockTestProtocol: public ProtocolDef<COMC, 2,2> {
 
     struct MyObjectTree: public Node {
         struct Settings: Node {
-            ValueNodeReadWriteable<TYPE_UINT16, 0> value1;
-            ValueNodeReadWriteable<TYPE_UINT16, 1>  value2;
+            ValueNodeReadWriteable<TYPE_UINT16, 0, COMC> value1;
+            ValueNodeReadWriteable<TYPE_UINT16, 1, COMC>  value2;
         } settings;
-        ValueNodeReadWriteable<TYPE_F32, 2> value3ThatIsSendOnInit;
+        ValueNodeReadWriteable<TYPE_F32, 2, COMC> value3ThatIsSendOnInit;
     } objectTree;
 
     static const uint8_t OT_TABLE_SIZE = 3;
@@ -42,6 +42,10 @@ struct MockTestProtocol: public ProtocolDef<COMMUNICATION_CLASS, 2,2> {
     };
 
 
-    explicit MockTestProtocol(COMMUNICATION_CLASS *sotCanCommunication)
-    : ProtocolDef<COMMUNICATION_CLASS, 2, 2>(sotCanCommunication) {};
+    explicit MockTestProtocol(COMC *sotCanCommunication)
+    : ProtocolDef<COMC, 2, 2>(sotCanCommunication) {
+        objectTree.settings.value1.__setProtocolRef(sotCanCommunication);
+        objectTree.settings.value2.__setProtocolRef(sotCanCommunication);
+        objectTree.value3ThatIsSendOnInit.__setProtocolRef(sotCanCommunication);
+    };
 };

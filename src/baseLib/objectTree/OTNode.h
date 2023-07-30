@@ -2,8 +2,12 @@
 
 #include <cinttypes>
 #include "OTNodeValueTypes.h"
+#include "OTUtil.h"
 #include "communication/can/Can.h"
 #include "util/EventFlag.h"
+
+template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE>
+struct ProtocolDef;
 
 
 using NodeId = uint8_t;
@@ -36,7 +40,7 @@ class ValueNodeAbstract {
      * This event flag will be set to true after the value of this node was changed by the remote master or client.
      * This happens when a write-request or read-response package is received.
      */
-    EventFlag wasChangedEvent;
+    EventFlag receivedValueUpdate;
 
   public:
     const uint8_t getRequiredDataSizeInBytes() const;
@@ -105,12 +109,56 @@ class ValueNodeTypeAbstract: public ValueNodeAbstract/*<PROTOCOL_DEF>*/ {
 
 
 
+template<class TYPE, class COMMUNICATION_CLASS>
+class ValueNodeTypeAbstractWithProt: public ValueNodeTypeAbstract<TYPE> {
+public:
+    ValueNodeTypeAbstractWithProt(NodeId nodeId) : ValueNodeTypeAbstract<TYPE>(nodeId) {
+        this->dataType = getValueNoteDataType<TYPE>();
+    };
+
+    friend void valueNodeTypeAbstractWithProt_setProtocolRef(
+            ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS> &vNode, COMMUNICATION_CLASS *protocol);
+
+protected:
+    COMMUNICATION_CLASS *sotCommunication = nullptr;
+
+public:
+    /// This needs to be called before doing calling send or sendReadReq
+    void __setProtocolRef(COMMUNICATION_CLASS *protocol) {
+        this->sotCommunication = protocol;
+    }
+
+
+public:
+    /**
+     * Send value of value node to the remote master or client.
+     * This will add the corresponding send package into the can send buffer.
+     */
+    inline void sendValue() {
+        sotCommunication->sendValue(*this);
+    }
+
+    /**
+     * Send a request for reading the current value of this node from a remote client or server.
+     * When the new read value arrives it will directly overwrite the current value of this node.
+     * This will put the corresponding can frame directly into the can send buffer.
+     * @note it will take time for the new value to arrive, so the new value will not be immediately available.
+     */
+    inline void sendReadValueReq() {
+        sotCommunication->sendReadValueReq(*this);
+    }
+};
+
+
+
+
+
 // -- Access Types --------------------------------------------
 
-template<class TYPE, NodeId NODE_ID>
-class ValueNodeWritable: public ValueNodeTypeAbstract<TYPE> {
+template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
+class ValueNodeWritable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS> {
   public:
-    ValueNodeWritable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
+    ValueNodeWritable(): ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS>(NODE_ID) {
     };
 
     void write(TYPE value) {
@@ -118,10 +166,10 @@ class ValueNodeWritable: public ValueNodeTypeAbstract<TYPE> {
     }
 };
 
-template<class TYPE, NodeId NODE_ID>
-class ValueNodeReadable: public ValueNodeTypeAbstract<TYPE> {
+template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
+class ValueNodeReadable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS> {
   public:
-    ValueNodeReadable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
+    ValueNodeReadable(): ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS>(NODE_ID) {
     };
 
 
@@ -130,10 +178,10 @@ class ValueNodeReadable: public ValueNodeTypeAbstract<TYPE> {
     }
 };
 
-template<class TYPE, NodeId NODE_ID>
-class ValueNodeReadWriteable: public ValueNodeTypeAbstract<TYPE> {
+template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
+class ValueNodeReadWriteable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS> {
   public:
-    ValueNodeReadWriteable(): ValueNodeTypeAbstract<TYPE>(NODE_ID) {
+    ValueNodeReadWriteable(): ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS>(NODE_ID) {
     };
 
     void write(TYPE value) {
