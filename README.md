@@ -1,4 +1,6 @@
-# CAN SOT Protocol 🌳 &emsp;  🚧 WIP 🚧
+[![pipeline status](https://gitlab.com/JeyRunner/can-sot-protocol/badges/main/pipeline.svg)](https://gitlab.com/JeyRunner/can-sot-protocol/-/commits/main)
+
+# CAN SOT Protocol 🌳  &emsp;  🚧 WIP 🚧
 This is the **CAN _simple object tree_ protocol** for the CAN bus.
 Although it uses ideas from CANopen, it is not compatible with it but can be seen as a very simplified version.
 

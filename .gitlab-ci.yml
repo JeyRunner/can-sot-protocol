@@ -1,0 +1,29 @@
+image: ghcr.io/rikorose/gcc-cmake #gcc-cmake #gcc
+
+build:
+  stage: build
+  # instead of calling g++ directly you can also use some build toolkit like make
+  # install the necessary build tools when needed
+  # before_script:
+  #   - apt update && apt -y install make autoconf
+  script:
+    - mkdir build && cd build
+    - cmake ..
+    - make
+    #- #g++ helloworld.cpp -o mybinary
+  artifacts:
+    paths:
+      - build
+    expire_in: 20 minutes
+      # depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
+      # cache:
+      #   paths:
+      #     - "*.o"
+
+# run tests using the binary built before
+test:
+  stage: test
+  needs: ["build"]
+  script:
+    - cd build
+    - ./CanSotProtocol-baseLib-tests --success
