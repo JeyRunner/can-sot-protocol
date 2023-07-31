@@ -35,8 +35,9 @@ class MockCanBuffer : public CanInterface {
     }
 
 
-    void canSendFrame(CanFrame &frame) override {
+    bool canSendFrame(CanFrame &frame) override {
       putFrameInSendBuffer(frame);
+      return true;
     }
 
     bool getNextCanFrameReceived(CanFrame &receiveFrame) override {

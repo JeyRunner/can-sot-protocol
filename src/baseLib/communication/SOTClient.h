@@ -63,6 +63,7 @@ public:
           }
           communicationState = SOT_COMMUNICATION_STATE::INITIALIZED;
           sendInitCommunicationResponse(masterDeviceId);
+          gotConnectedEvent._triggerEvent();
           break;
         }
 
@@ -119,6 +120,11 @@ public:
     PROTOCOL &getProtocol() {
       return protocolDef;
     }
+
+
+    /// event flag is set when client is successfully connected to this master
+    EventFlag gotConnectedEvent;
+
 
 protected:
     Result<ValueNodeAbstract*> getValueNodeById(uint8_t id) {

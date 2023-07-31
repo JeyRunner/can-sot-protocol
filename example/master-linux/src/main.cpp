@@ -2,6 +2,7 @@
 #include <communication/SOTMaster.h>
 #include <thread>
 #include "protocol_generated/SOTProtocol.hpp"
+#include <linux_socketCan/SocketCanInterface.hpp>
 
 using namespace lyra;
 using namespace std;
@@ -34,7 +35,11 @@ int main(int argc, const char **argv) {
 
 
   // create master and connect to client
-  CanInterface canInterface;
+  SocketCanInterface canInterface(args_canInterface);
+  if (!canInterface.startCanInterface()) {
+    exit(1);
+  }
+
   SOTMaster<TestProtocol, CanInterface> sotMaster(canInterface);
   sotMaster.addAndConnectToClient(args_clientDeviceId);
   auto &sotClient = sotMaster.getClient(args_clientDeviceId);
@@ -42,13 +47,15 @@ int main(int argc, const char **argv) {
 
   // main communication loop
   while (true) {
+    auto timeStart = std::chrono::system_clock::now();
+
     // handle all received can frames
     sotMaster.processCanFrames();
 
     // on first connected
     if (sotMaster.getClient(args_clientDeviceId).gotConnectedEvent) {
       sotMaster.getClient(args_clientDeviceId).gotConnectedEvent.clear(); // reset event
-      cout << "client with id " << args_clientDeviceId << " got successfully connected" << endl;
+      cout << "client with id " << (int)args_clientDeviceId << " got successfully connected" << endl;
 
       // read some value from client
       sotClient.protocol.objectTree.settings.value1.sendReadValueReq();
@@ -59,6 +66,19 @@ int main(int argc, const char **argv) {
     if (sotClient.protocol.objectTree.settings.value1.receivedValueUpdate.checkAndReset()) {
       cout << "got value from client: settings.value1 = " << sotClient.protocol.objectTree.settings.value1.read() << endl;
     }
+    if (sotClient.protocol.objectTree.settings.subSettings.value3.receivedValueUpdate.checkAndReset()) {
+      cout << "got value from client: settings.subSettings.value3 = " << sotClient.protocol.objectTree.settings.subSettings.value3.read() << endl;
+    }
+
+
+    // read some value from client
+    sotClient.protocol.objectTree.settings.subSettings.value3.sendReadValueReq();
+
+
+    auto timeEnd = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = timeEnd - timeStart;
+    cout << "loop took " << elapsed_seconds.count() << "s" << endl;
+
 
     // wait
     this_thread::sleep_for(1ms);

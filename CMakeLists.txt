@@ -46,3 +46,4 @@ target_link_libraries(${PROJECT_NAME}-baseLib-tests PRIVATE etl::etl doctest::do
 
 ## Example applications ######
 include(example/master-linux/CMakeLists.txt)
+include(example/client-linux/CMakeLists.txt)

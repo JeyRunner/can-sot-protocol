@@ -134,7 +134,9 @@ public:
      * This has to be called periodically, so that the can receive buffer does not flow over.
      */
     void processCanFrames() {
+      uint8_t data[8] = {};
       CanFrame frame;
+      frame.data = data;
       while (canInterface.getNextCanFrameReceived(frame)) {
           processCanFrameReceived(frame);
       }

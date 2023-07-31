@@ -23,8 +23,9 @@ class CanInterface {
 
     /**
      * Put can frame into the send buffer.
+     * @return true if was successfully
      */
-    virtual void canSendFrame(CanFrame &frame) {}
+    virtual bool canSendFrame(CanFrame &frame) {}
 
 
     /**
