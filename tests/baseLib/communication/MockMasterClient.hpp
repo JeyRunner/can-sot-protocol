@@ -102,6 +102,8 @@ class MockCanBuffer : public CanInterface {
 
 class TestSOTMaster : public SOTMaster<MockTestProtocol, TestSOTMaster>, public MockCanBuffer {
   public:
+    using SOTMaster<MockTestProtocol, TestSOTMaster>::sendInitCommunicationRequest;
+
     explicit TestSOTMaster() : MockCanBuffer("Master"), SOTMaster<MockTestProtocol, TestSOTMaster>(*this) {}
 
     /*

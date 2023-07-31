@@ -31,7 +31,9 @@ TEST_CASE("MasterClient communication: init") {
   CHECK(client.getSendFrameType(0) == WRITE_NODE_VALUE_REQEUST);
   CHECK(client.getSendFrame(0).dataLength == 1 + 4);
   CHECK(client.getSendFrame(0).data[0] == client.getProtocol().metaNodeValuesToSendOnInit[0]->nodeId);
-  CHECK(client.getSendFrameType(1) == INIT_COMMUNICATION_RESPONSE);
+  CHECK(client.getLastSendFrameType() == INIT_COMMUNICATION_RESPONSE);
+  CHECK(client.getLastSendFrame().data[0] == (uint8_t)INIT_COMMUNICATION_RESPONSE_TYPES::ACCEPT);
+
 
   master.clearFramesSend();
   master.processCanFramesReceived(client.framesSend);
@@ -41,6 +43,59 @@ TEST_CASE("MasterClient communication: init") {
   CHECK(master.getClient(1).gotConnectedEvent.checkAndReset());
   CHECK(!master.getClient(1).gotConnectedEvent);
 }
+
+
+TEST_CASE("MasterClient communication: init but client already connected -> do reconnect") {
+  TestSOTMaster master;
+  TestSOTClient client;
+
+  // connect
+  master.addAndConnectToClient(1);
+  auto &masterProtocol = master.getClient(1).protocol;
+  client.processCanFramesReceived(master.framesSend);
+  master.processCanFramesReceived(client.framesSend);
+  master.getClient(1).gotConnectedEvent.clear();
+  client.clearFramesSend();
+  master.clearFramesSend();
+
+  CHECK(client.communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
+  CHECK(master.getClient(1).isConnected());
+
+  // try to connect again to client (simulates that the client is already connected but the master assumes it is not)
+  master.getClient(1).communicationState = SOT_COMMUNICATION_STATE::INITIALIZING; // needs to be set manual for test
+  master.sendInitCommunicationRequest(1);
+  client.processCanFramesReceived(master.framesSend);
+  master.clearFramesSend();
+
+  CHECK(client.communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
+  CHECK(client.framesSend.size() == 1);
+  CHECK(client.getSendFrameType(0) == INIT_COMMUNICATION_RESPONSE);
+  CHECK(client.getSendFrame(0).dataLength == 1 );
+  CHECK(client.getSendFrame(0).data[0] == (uint8_t)INIT_COMMUNICATION_RESPONSE_TYPES::NOT_ACCEPT_NOT_IN_UNINITIALIZED_STATE);
+
+  master.processCanFramesReceived(client.framesSend);
+  client.clearFramesSend();
+
+  CHECK(master.getClients().size() == 1);
+  CHECK(master.getClient(1).communicationState == SOT_COMMUNICATION_STATE::INITIALIZING);
+  REQUIRE(master.framesSend.size() == 2);
+  CHECK(master.getSendFrameType(0) == DISCONNECT_COMMUNICATION_REQUEST);
+  CHECK(master.getSendFrameType(1) == INIT_COMMUNICATION_REQUEST);
+  CHECK(!master.getClient(1).gotConnectedEvent);
+
+  client.processCanFramesReceived(master.framesSend);
+  master.clearFramesSend();
+  master.processCanFramesReceived(client.framesSend);
+
+  CHECK(client.communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
+  CHECK(client.framesSend.size() >= 1);
+  CHECK(client.getLastSendFrameType() == INIT_COMMUNICATION_RESPONSE);
+  CHECK(client.getLastSendFrame().dataLength == 1 );
+  CHECK(client.getLastSendFrame().data[0] == (uint8_t)INIT_COMMUNICATION_RESPONSE_TYPES::ACCEPT);
+  CHECK(master.getClient(1).communicationState == SOT_COMMUNICATION_STATE::INITIALIZED);
+  REQUIRE(master.framesSend.size() == 0);
+}
+
 
 
 TEST_CASE("MasterClient communication: client send initValues to master") {

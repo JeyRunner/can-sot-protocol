@@ -34,6 +34,22 @@ struct ConnectedClient {
     inline void sendReadValueReq(ValueNodeAbstract &vNode) {
         sotMaster->sendReadValueReq(vNode, deviceId);
     }
+
+    /**
+     * Return true if currently connected to client.
+     */
+    bool isConnected() {
+      return communicationState == SOT_COMMUNICATION_STATE::INITIALIZED;
+    }
+
+    /**
+     * Send a disconnect request to client and then a init communication request.
+     * Will therefor try to reconnect to client.
+     * When connected to the client the gotConnectedEvent flag will be set.
+     */
+    void reconnectToClient() {
+      sotMaster->reconnectToClient(deviceId);
+    }
 };
 
 
@@ -43,10 +59,12 @@ using PROTOCOL_DEF = ProtocolDef<1,1>; // just dummy value to get code autocompl
 template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS>
 #endif
 class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSize;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeId;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeValue;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationResponse;
-    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationRequest;
+    //using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationRequest;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendDisconnectCommunicationRequest;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueRequest;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueResponse;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendWriteNodeValueRequest;
@@ -75,9 +93,17 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
       switch (devIdAndType.messageType) {
         case INIT_COMMUNICATION_RESPONSE: {
           auto &client = getClient(devIdAndType);
+          RETURN_IF_FALSE(checkPackageDataSize(frame, 1));
+          auto responseType = static_cast<INIT_COMMUNICATION_RESPONSE_TYPES>(frame.data[0]);
           if (client.communicationState == SOT_COMMUNICATION_STATE::INITIALIZING) {
-            client.communicationState = SOT_COMMUNICATION_STATE::INITIALIZED;
-            client.gotConnectedEvent._triggerEvent();
+            if (responseType == INIT_COMMUNICATION_RESPONSE_TYPES::ACCEPT) {
+              client.communicationState = SOT_COMMUNICATION_STATE::INITIALIZED;
+              client.gotConnectedEvent._triggerEvent();
+            }
+            else if (responseType == INIT_COMMUNICATION_RESPONSE_TYPES::NOT_ACCEPT_NOT_IN_UNINITIALIZED_STATE) {
+              reconnectToClient(client.deviceId);
+              logWarn("INIT_COMMUNICATION_REQUEST was not accepted by client, try to disconnect client and try again");
+            }
           }
           else {
             logWarn("Got INIT_COMMUNICATION_RESPONSE although currently not in SENT_INITIALIZATION_REQUEST state");
@@ -151,7 +177,8 @@ public:
 
     /**
      * Add a client and connect with it.
-     * This is non-blocking (after returning from this function the connection initiation will not be finished)
+     * This is non-blocking (after returning from this function the connection initiation will not be finished).
+     * When connected to the client the gotConnectedEvent flag will be set of the corresponding client object.
      * @param clientDeviceId
      * @return true when the client does not exist already in the client list, and thus was added successfully.
      */
@@ -166,6 +193,17 @@ public:
       sendInitCommunicationRequest(clientDeviceId);
       client.communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
       return true;
+    }
+
+    /**
+     * Send a disconnect request to client and then a init communication request.
+     * Will therefor try to reconnect to client.
+     * When connected to the client the gotConnectedEvent flag will be set of the corresponding client object.
+     */
+    void reconnectToClient(const uint8_t clientDeviceId) {
+      getClient(clientDeviceId).communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
+      sendDisconnectCommunicationRequest(clientDeviceId);
+      sendInitCommunicationRequest(clientDeviceId);
     }
 
 
@@ -199,6 +237,10 @@ private:
     inline void sendReadValueReq(ValueNodeAbstract &vNode, uint8_t clientDeviceId) {
         sendReadNodeValueRequest(vNode, clientDeviceId);
     }
+
+
+  protected:
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationRequest;
 
     friend Client;
 };

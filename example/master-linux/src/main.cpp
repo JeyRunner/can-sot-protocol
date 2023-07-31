@@ -52,6 +52,11 @@ int main(int argc, const char **argv) {
     // handle all received can frames
     sotMaster.processCanFrames();
 
+    // do nothing as long the client is not connected yet
+    if (!sotMaster.getClient(args_clientDeviceId).isConnected()) {
+      continue;
+    }
+
     // on first connected
     if (sotMaster.getClient(args_clientDeviceId).gotConnectedEvent) {
       sotMaster.getClient(args_clientDeviceId).gotConnectedEvent.clear(); // reset event

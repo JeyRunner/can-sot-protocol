@@ -1,5 +1,4 @@
 ## General Package Structure
-
 The 11 bit CAN ID field and Data of a CAN frame is split into:
 
 | 0-2 bit of CAN ID | 3-5 bit of CAN ID     | 6-11 bit of CAN ID     | 0-8 Bytes of Data |
@@ -17,7 +16,6 @@ CAN Package Direction:
 - 🖥️ 🔄 🎚️️ &ensp; both client of server can send package to the other part
 
 ## General Communication Flow
-
 This is an example for a typical communication flow. <br/>
 Here the client offers a `tmp_request_value` called `mode.requestMode` to activate streaming of some sensor data (there is code on the  client to do that). This will change the clients `currentStatus` value.
 
@@ -45,7 +43,6 @@ sequenceDiagram
 ## Control Packages
 
 #### Init Communication Request  &ensp; 🖥️ ➡️ 🎚️
-
 This is the first exchanged message (from master to client). <br/>
 After receiving this message, the client will first send all its `_meta` information of the OT to the master (via Write Node Value Requests).
 After the client is finished with sending all values in `_meta`, it will respond with an Init Communication Response.
@@ -55,23 +52,32 @@ After the client is finished with sending all values in `_meta`, it will respond
 | 0b00'0000              |             |
 
 #### Init Communication Response  &ensp; 🎚️ ➡️ 🖥
-
-This is the response of the client to the masters Init Communication Request (from client to master).
+This is the response of the client to the masters Init Communication Request (from client to master). 
+Afterward, client and master are connected.
 
 | SOT Message ID (5 bit) | Data 1 byte                                                                  |
 |------------------------|------------------------------------------------------------------------------|
 | 0b00'0001              | `0` if communication is accepted.<br/> `1` if communication is not accepted. |
 
-#### Communication Error  &ensp; 🖥️ 🔄 🎚
 
+#### Disconnect Communication Request  &ensp; 🖥️ ➡️ 🎚️
+To disconnect a client, the master can send a disconnect communication request to the client.
+Afterward, client and master are not connected anymore.
+
+| SOT Message ID (5 bit) | Data 0 byte |
+|------------------------|-------------|
+| 0b00'0011              |             |
+
+#### Communication Error  &ensp; 🖥️ 🔄 🎚
 On device sends this to the other device its communicating with to indicate there is a general communication error/problem.
 
 | SOT Message ID (5 bit) | Data 1 byte                                                                                        |
 |------------------------|----------------------------------------------------------------------------------------------------|
 | 0b00'0010              | `0` Receive Buffer Overflow (other sending device should slow down).<br/> `1` Send Buffer Overflow |
 
-## Object Directory Read / Write
 
+
+## Object Directory Read / Write
 Works in both directions from master to client and the other way.
 
 ### Write

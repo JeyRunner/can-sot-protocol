@@ -34,6 +34,14 @@ class SOTCanCommunication {
     CAN_INTERFACE_CLASS &canInterface;
     uint8_t myDeviceId = 0;
 
+    static bool checkPackageDataSize(const CanFrame &frame, uint8_t expectedDataSize) {
+      if (frame.dataLength != expectedDataSize) {
+        logError("received Can Frame data size %d bytes has not expected size of %d", frame.dataLength, expectedDataSize);
+        return false;
+      }
+      return true;
+    }
+
     /**
      * check received frame data size is >= 1, so that it can hold the nodeId in the first byte
      * @return true if ok
@@ -64,10 +72,24 @@ class SOTCanCommunication {
       sendMessage(SOT_MESSAGE_TYPE::INIT_COMMUNICATION_REQUEST, targetDeviceId, nullptr, 0);
     }
 
-    void sendInitCommunicationResponse(uint8_t targetDeviceId) {
-      sendMessage(SOT_MESSAGE_TYPE::INIT_COMMUNICATION_RESPONSE, targetDeviceId, nullptr, 0);
+    void sendInitCommunicationResponse(uint8_t targetDeviceId, INIT_COMMUNICATION_RESPONSE_TYPES type) {
+      uint8_t dataSize = 1;
+      uint8_t data[dataSize];
+      data[0] = static_cast<uint8_t>(type);
+      sendMessage(SOT_MESSAGE_TYPE::INIT_COMMUNICATION_RESPONSE, targetDeviceId, data, dataSize);
     }
 
+    void sendDisconnectCommunicationRequest(uint8_t targetDeviceId) {
+      sendMessage(SOT_MESSAGE_TYPE::DISCONNECT_COMMUNICATION_REQUEST, targetDeviceId, nullptr, 0);
+    }
+
+
+    void sendCommunicationError(uint8_t targetDeviceId, COMMUNICATION_ERROR_TYPES error) {
+      uint8_t dataSize = 1;
+      uint8_t data[dataSize];
+      data[0] = error;
+      sendMessage(SOT_MESSAGE_TYPE::COMMUNICATION_ERROR, targetDeviceId, data, dataSize);
+    }
 
 
     void sendWriteNodeValueRequest(ValueNodeAbstract &valueNode, uint8_t targetDeviceId) {

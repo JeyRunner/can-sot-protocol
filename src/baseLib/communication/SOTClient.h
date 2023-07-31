@@ -18,6 +18,7 @@ template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1
 #endif
 class SOTClient: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeId;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendCommunicationError;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationResponse;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendWriteNodeValueRequest;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeValue;
@@ -50,10 +51,19 @@ public:
     void processCanFrameReceived(CanFrame &frame) final {
       DeviceIdAndSOTMessageType devIdAndType = unpackCanFrameId(frame);
 
+      // do nothing when not connected
+      if (communicationState != SOT_COMMUNICATION_STATE::INITIALIZED) {
+        if (devIdAndType.messageType != INIT_COMMUNICATION_REQUEST) {
+          logWarn("Ignore incoming package, since currently not in state INITIALIZED");
+          return;
+        }
+      }
+
       switch (devIdAndType.messageType) {
         case INIT_COMMUNICATION_REQUEST: {
           if (communicationState != SOT_COMMUNICATION_STATE::UNINITIALIZED) {
             logWarn("Got INIT_COMMUNICATION_REQUEST although currently not in UNINITIALIZED state");
+            sendInitCommunicationResponse(devIdAndType.sourceDeviceId, INIT_COMMUNICATION_RESPONSE_TYPES::NOT_ACCEPT_NOT_IN_UNINITIALIZED_STATE);
             return;
           }
           masterDeviceId = devIdAndType.sourceDeviceId;
@@ -62,8 +72,14 @@ public:
             sendWriteNodeValueRequest(*valueNode, masterDeviceId);
           }
           communicationState = SOT_COMMUNICATION_STATE::INITIALIZED;
-          sendInitCommunicationResponse(masterDeviceId);
+          sendInitCommunicationResponse(masterDeviceId, INIT_COMMUNICATION_RESPONSE_TYPES::ACCEPT);
           gotConnectedEvent._triggerEvent();
+          break;
+        }
+
+        case DISCONNECT_COMMUNICATION_REQUEST: {
+          communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
+          gotConnectedEvent.clear();
           break;
         }
 

@@ -23,6 +23,14 @@ enum SOT_MESSAGE_TYPE
     INIT_COMMUNICATION_RESPONSE = 0b00'0001,
 
     /**
+     * To disconnect a client, the master can send a disconnect communication request to the client.
+     * Afterward, client and master are not connected anymore.
+     * data = 1 bytes
+     */
+    DISCONNECT_COMMUNICATION_REQUEST = 0b00'0011,
+
+
+    /**
      * On device sends this to the other device its communicating with to indicate there is a general communication error/problem.
      * data = 1 bytes
      */
@@ -89,75 +97,16 @@ enum COMMUNICATION_ERROR_TYPES {
     CAN_RECEIVE_OVERFLOW,
 };
 
+enum class INIT_COMMUNICATION_RESPONSE_TYPES {
+    /// accept communication
+    ACCEPT,
+
+    /// reject communication request, since e.g. already connected
+    NOT_ACCEPT_NOT_IN_UNINITIALIZED_STATE,
+};
+
 
 /// Stream Packages ID range is 16-32
 const uint8_t SOT_MESSAGE_ID_FIRST_SP_ID = 16;
 
 
-
-
-
-/// @deprecated
-/// the data is encoded as little endian
-///  -> to also e.g. when int is in dataCarried it is also encoded as little endian
-struct CanPackage {
-    SOT_MESSAGE_TYPE canPackageType; // 4 bit
-
-    /// the available fields depend on the canPackageType
-    /// max 2^3=8 different field types
-    uint8_t fieldType = 0; // 3 bit
-
-    /// only relevant for packageTypes that can have different fieldTypes.
-    ///  -> only when apply is true all previously send values (and this one) will be applied.
-    /// e.g. useful for SET_PD_VALUES, to apply all different send PD values at once.
-    bool apply = true; // 1 bit
-
-    uint8_t *dataAll;
-    uint8_t *dataCarried;
-    uint8_t  dataCarriedLength;
-
-
-    /// write and read contained data as long
-    /// @todo: handle endianness
-    bool &dataAsBool() {
-      return *((bool *) dataCarried);
-    }
-
-    /// write and read contained data as unsigned int
-    /// @todo: handle endianness
-    uint16_t &dataAsUInt16() {
-      return *((uint16_t *) dataCarried);
-    }
-
-    /// write and read contained data as long
-    /// @todo: handle endianness
-    int32_t &dataAsLong() {
-      return *((int32_t *) dataCarried);
-    }
-
-    /// write and read contained data as float
-    /// @todo: handle endianness
-    float &dataAsFloat() {
-      return *((float *) dataCarried);
-    }
-
-    /// write and read contained data as int32
-    /// @todo: handle endianness
-    int32_t &dataAsInt32() {
-      return *((int32_t *) dataCarried);
-    }
-
-
-
-
-
-    /**
-     * write first byte of dataAll according to canPackageType and fieldType.
-     */
-    void writeHeaderToDataAll() {
-      this->dataAll[0] =
-          ((static_cast<int>(canPackageType) << 4 ) & 0b11110000) |
-          ((fieldType << 1) & 0b00001110) |
-          (apply  & 0x0000'0001);
-    }
-};
