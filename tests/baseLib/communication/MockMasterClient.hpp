@@ -3,6 +3,7 @@
 #include <utility>
 #include "communication/SOTMaster.h"
 #include "communication/SOTClient.h"
+#include "driver_template/DriverTemplate.hpp"
 #include "vector"
 #include "array"
 #include <algorithm>
@@ -11,6 +12,7 @@
 #include "MockSOTProtocol.hpp"
 
 using namespace std;
+
 
 static SOT_MESSAGE_TYPE getMessageType(CanFrame &frame) {
   return unpackCanFrameId(frame).messageType;
@@ -23,12 +25,30 @@ struct CanFrameWithData {
 
 
 constexpr size_t BUFFER_MAX_SIZE = 255;
-class MockCanBuffer {
+
+class MockCanBuffer : public CanInterface {
   public:
     list<CanFrameWithData> framesSend;
+    list<CanFrameWithData> framesReceived;
 
-    explicit MockCanBuffer(string name): name(std::move(name)) {
+    explicit MockCanBuffer(string name) : name(std::move(name)) {
     }
+
+
+    void canSendFrame(CanFrame &frame) override {
+      putFrameInSendBuffer(frame);
+    }
+
+    bool getNextCanFrameReceived(CanFrame &receiveFrame) override {
+      if (framesReceived.empty()) {
+        return false;
+      }
+      receiveFrame = framesReceived.front().frame;
+      framesReceived.pop_front();
+      //cout << "can interface: get next frame rec" << endl;
+      return true;
+    }
+
 
     CanFrame &getSendFrame(int frameIndex) {
       return std::next(framesSend.begin(), frameIndex)->frame;
@@ -62,53 +82,59 @@ class MockCanBuffer {
     const string name;
 
     void putFrameInSendBuffer(CanFrame &frame) {
-      cout << "[" << name << "]" <<" send Frame with id: " << frame.canId << "  data(" << (int)frame.dataLength << "B)"
+      cout << "[" << name << "]" << " send Frame with id: " << frame.canId << "  data(" << (int) frame.dataLength
+           << "B)"
            << (frame.dataLength > 0 ? ": " : "")
            << byteArrayToString(frame.data, frame.dataLength) << endl;
       auto &newF = framesSend.emplace_back();
       if (frame.dataLength > 0) {
-        memcpy(newF.data, frame.data, sizeof(uint8_t)*frame.dataLength);
+        memcpy(newF.data, frame.data, sizeof(uint8_t) * frame.dataLength);
       }
       newF.frame = CanFrame{
-          .canId = frame.canId,
-          .data = newF.data,
-          .dataLength = frame.dataLength,
+              .canId = frame.canId,
+              .data = newF.data,
+              .dataLength = frame.dataLength,
       };
     }
 };
 
 
-class TestSOTMaster: public SOTMaster<MockTestProtocol>, public MockCanBuffer {
-public:
-    explicit TestSOTMaster(): MockCanBuffer("Master")
-    {}
+class TestSOTMaster : public SOTMaster<MockTestProtocol, TestSOTMaster>, public MockCanBuffer {
+  public:
+    explicit TestSOTMaster() : MockCanBuffer("Master"), SOTMaster<MockTestProtocol, TestSOTMaster>(*this) {}
 
+    /*
     void canSendFrame(CanFrame &frame) override {
       putFrameInSendBuffer(frame);
     }
+     */
 
     void processCanFramesReceived(list<CanFrameWithData> &frames) {
+      framesReceived = frames;
+      processCanFrames();
+      /*
       for (auto &f : frames) {
         this->processCanFrameReceived(f.frame);
       }
+      */
     }
 };
 
 
-class TestSOTClient: public SOTClient<MockTestProtocol>, public MockCanBuffer {
-public:
-    using SOTClient<MockTestProtocol>::communicationState;
+class TestSOTClient : public SOTClient<MockTestProtocol, TestSOTClient>, public MockCanBuffer {
+  public:
+    using SOTClient<MockTestProtocol, TestSOTClient>::communicationState;
 
-    explicit TestSOTClient(): MockCanBuffer("Client"), SOTClient<MockTestProtocol>(1)
-    {}
+    explicit TestSOTClient() : MockCanBuffer("Client"), SOTClient<MockTestProtocol, TestSOTClient>(*this, 1) {}
 
+    /*
     void canSendFrame(CanFrame &frame) override {
       putFrameInSendBuffer(frame);
     }
+    */
 
     void processCanFramesReceived(list<CanFrameWithData> &frames) {
-      for (auto &f : frames) {
-        this->processCanFrameReceived(f.frame);
-      }
+      framesReceived = frames;
+      processCanFrames();
     }
 };

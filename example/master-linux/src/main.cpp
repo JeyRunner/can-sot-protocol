@@ -34,9 +34,10 @@ int main(int argc, const char **argv) {
 
 
   // create master and connect to client
-  SOTMaster<TestProtocol> sotMaster;
-  sotMaster.addAndConnectToClient(1);
-  auto &sotClient = sotMaster.getClient(1);
+  CanInterface canInterface;
+  SOTMaster<TestProtocol, CanInterface> sotMaster(canInterface);
+  sotMaster.addAndConnectToClient(args_clientDeviceId);
+  auto &sotClient = sotMaster.getClient(args_clientDeviceId);
 
 
   // main communication loop
@@ -45,8 +46,8 @@ int main(int argc, const char **argv) {
     sotMaster.processCanFrames();
 
     // on first connected
-    if (sotMaster.getClient(1).gotConnectedEvent) {
-      sotMaster.getClient(1).gotConnectedEvent.clear(); // reset event
+    if (sotMaster.getClient(args_clientDeviceId).gotConnectedEvent) {
+      sotMaster.getClient(args_clientDeviceId).gotConnectedEvent.clear(); // reset event
       cout << "client with id " << args_clientDeviceId << " got successfully connected" << endl;
 
       // read some value from client

@@ -10,11 +10,11 @@
 #include "SOTCanCommunication.h"
 #include "util/EventFlag.h"
 
-template<template <class T> class PROTOCOL_DEF>
+template<template <class T> class PROTOCOL_DEF, class CAN_INTERFACE_CLASS>
 class SOTMaster;
 
 
-template<template <class T> class PROTOCOL_DEF>
+template<template <class T> class PROTOCOL_DEF, class CAN_INTERFACE_CLASS>
 struct ConnectedClient {
     SOT_COMMUNICATION_STATE communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
     /// contains object tree
@@ -24,7 +24,7 @@ struct ConnectedClient {
     EventFlag gotConnectedEvent;
 
     uint8_t deviceId;
-    SOTMaster<PROTOCOL_DEF> *sotMaster = nullptr;
+    SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS> *sotMaster = nullptr;
     explicit ConnectedClient() : protocol(this) {}
 
     inline void sendValue(ValueNodeAbstract &vNode) {
@@ -40,27 +40,27 @@ struct ConnectedClient {
 #ifdef DEV_MODE
 using PROTOCOL_DEF = ProtocolDef<1,1>; // just dummy value to get code autocompletion
 #else
-template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/>
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS>
 #endif
-class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF> {
-    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeId;
-    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeValue;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendInitCommunicationResponse;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendInitCommunicationRequest;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueRequest;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueResponse;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendWriteNodeValueRequest;
-    using SOTCanCommunication<PROTOCOL_DEF>::myDeviceId;
+class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeId;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeValue;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationResponse;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationRequest;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueRequest;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueResponse;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendWriteNodeValueRequest;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::myDeviceId;
 
   private:
     //using M = ConnectedClient<PROTOCOL_DEF>;
-    using Client = ConnectedClient<PROTOCOL_DEF>;
+    using Client = ConnectedClient<PROTOCOL_DEF, CAN_INTERFACE_CLASS>;
 
     /// id is the client deviceId
     std::map<uint8_t, Client> clients;
 
   public:
-    explicit SOTMaster() {
+    explicit SOTMaster(CAN_INTERFACE_CLASS &canInterface): SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>(canInterface) {
       myDeviceId = 0;
     }
 

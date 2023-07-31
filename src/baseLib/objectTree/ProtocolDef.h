@@ -3,7 +3,7 @@
 #include "objectTree/OTNodeValueTypes.h"
 #include "objectTree/OTDeclares.h"
 
-template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/>
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS>
 class SOTCanCommunication;
 
 

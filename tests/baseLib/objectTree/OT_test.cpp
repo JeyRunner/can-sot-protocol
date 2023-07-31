@@ -7,6 +7,8 @@
 #include "TestUtil.h"
 
 
+using SOTDummyClient = SOTClient<TestProtocol, CanInterface>;
+
 
 TEST_CASE("test ValueNodeTypeAbstract") {
   SUBCASE("UInt8") {
@@ -35,8 +37,8 @@ TEST_CASE("test ValueNodeTypeAbstract") {
 
 template<class TYPE> static void testObjectValueWriteRead(TYPE value) {
   uint8_t data[8] = {0};
-  ValueNodeReadWriteable<TYPE, 0, SOTClient<TestProtocol>> valueNode;
-  ValueNodeReadWriteable<TYPE, 0, SOTClient<TestProtocol>> valueNode2;
+  ValueNodeReadWriteable<TYPE, 0, SOTDummyClient> valueNode;
+  ValueNodeReadWriteable<TYPE, 0, SOTDummyClient> valueNode2;
   valueNode.write(value);
   CHECK(valueNode.read() == value);
 

@@ -7,6 +7,7 @@
 #include "objectTree/ObjectTree.h"
 #include "objectTree/ProtocolDef.h"
 #include "util/Result.h"
+#include "driver_template/DriverTemplate.hpp"
 
 #ifdef IS_MASTER_DEF
 #include "set"
@@ -26,10 +27,11 @@ enum class SOT_COMMUNICATION_STATE {
 //template<class PROTOCOL_DEF> requires ProtocolDefType<PROTOCOL_DEF, 1>
 template<class PROTOCOL_DEF = Protocol<1,1>>
 #else
-template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/>
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS>
 #endif
 class SOTCanCommunication {
   protected:
+    CAN_INTERFACE_CLASS &canInterface;
     uint8_t myDeviceId = 0;
 
     /**
@@ -105,7 +107,8 @@ class SOTCanCommunication {
       });
       frame.data = data;
       frame.dataLength = dataSize;
-      canSendFrame(frame);
+      //canSendFrame(frame);
+      canInterface.canSendFrame(frame);
     }
 
 
@@ -113,36 +116,28 @@ class SOTCanCommunication {
       return frame.data[0];
     }
 
-
-
-    /**
-     * Handle incoming can frame. Store the can frame in the receive buffer.
-     */
-    static void onCanFrameReceived(CanFrame &frame) {
-
-    }
-
-
-    /**
-     * Put can frame into the send buffer.
-     */
-    virtual void canSendFrame(CanFrame &frame) {
-
-    }
-
-public:
     /**
      * Process a Can frame from the receive buffer.
      * Handle responses, writes value to OT.
      */
     virtual void processCanFrameReceived(CanFrame &frame) = 0;
 
+
+
+public:
+    explicit SOTCanCommunication(CAN_INTERFACE_CLASS &canInterface) : canInterface(canInterface) {}
+
+
     /**
      * Handle all received can frames in the can receive buffer.
      * Handle responses, writes values to OT.
+     * This has to be called periodically, so that the can receive buffer does not flow over.
      */
     void processCanFrames() {
-      // @todo implement
+      CanFrame frame;
+      while (canInterface.getNextCanFrameReceived(frame)) {
+          processCanFrameReceived(frame);
+      }
     }
 
 

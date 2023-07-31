@@ -27,7 +27,7 @@ message(STATUS "baseLibSrc: ${baseLibSrc}")
 #add_library(${PROJECT_NAME}-baseLib INTERFACE ${baseLibHeaders} ${baseLibSrc})
 add_library(${PROJECT_NAME}-baseLib ${baseLibHeaders} ${baseLibSrc})
 set_target_properties(${PROJECT_NAME}-baseLib PROPERTIES CXX_STANDARD 17)
-target_include_directories(${PROJECT_NAME}-baseLib PUBLIC src/baseLib/)
+target_include_directories(${PROJECT_NAME}-baseLib PUBLIC src/baseLib/ src/driver)
 target_link_libraries(${PROJECT_NAME}-baseLib PRIVATE etl::etl)
 
 ## just for dev, so that we get nice code completion for some templates
@@ -39,7 +39,7 @@ target_link_libraries(${PROJECT_NAME}-baseLib PRIVATE etl::etl)
 file(GLOB_RECURSE baseLibTestSrc CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tests/baseLib/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/tests/baseLib/**/*.cpp")
 add_executable(${PROJECT_NAME}-baseLib-tests ${baseLibHeaders} ${baseLibSrc} ${baseLibTestSrc})
 #target_compile_features(${PROJECT_NAME}-baseLib-tests PRIVATE cxx_std_17)
-target_include_directories(${PROJECT_NAME}-baseLib-tests PUBLIC src/baseLib/ "${CMAKE_CURRENT_SOURCE_DIR}/tests/testUtil/")
+target_include_directories(${PROJECT_NAME}-baseLib-tests PUBLIC src/baseLib/ src/driver "${CMAKE_CURRENT_SOURCE_DIR}/tests/testUtil/")
 target_link_libraries(${PROJECT_NAME}-baseLib-tests PRIVATE etl::etl doctest::doctest )
 
 

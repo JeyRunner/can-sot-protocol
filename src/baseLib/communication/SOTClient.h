@@ -14,16 +14,16 @@
 using PROTOCOL_DEF = ProtocolDef<_DummpProtocl, 1,1>; // just dummy value to get code autocompletion
 //template<class PROTOCOL_DEF> requires ProtocolDefType<PROTOCOL_DEF, 1>
 #else
-template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/>
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS>
 #endif
-class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
-    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeId;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendInitCommunicationResponse;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendWriteNodeValueRequest;
-    using SOTCanCommunication<PROTOCOL_DEF>::checkPackageDataSizeForNodeValue;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueRequest;
-    using SOTCanCommunication<PROTOCOL_DEF>::sendReadNodeValueResponse;
-    using PROTOCOL = PROTOCOL_DEF<SOTClient<PROTOCOL_DEF>>;
+class SOTClient: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeId;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationResponse;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendWriteNodeValueRequest;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeValue;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueRequest;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueResponse;
+    using PROTOCOL = PROTOCOL_DEF<SOTClient<PROTOCOL_DEF, CAN_INTERFACE_CLASS>>;
 
   protected:
     /// contains the object tree
@@ -35,7 +35,10 @@ class SOTClient: public SOTCanCommunication<PROTOCOL_DEF> {
 
 public:
     SOTClient() = delete;
-    explicit SOTClient(uint8_t myDeviceId): protocolDef(this) {
+    explicit SOTClient(CAN_INTERFACE_CLASS &canInterface, uint8_t myDeviceId)
+    : SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>(canInterface), protocolDef(this)
+    {
+      //canInterface.setSotCanCommunication(this);
       this->myDeviceId = myDeviceId;
     }
 
