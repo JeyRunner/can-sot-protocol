@@ -11,6 +11,7 @@ using namespace std;
 // cli args
 string args_canInterface = "can0";
 uint8_t  args_clientDeviceId = 1;
+unsigned int loopDelayMs = 1;
 
 
 int main(int argc, const char **argv) {
@@ -19,7 +20,8 @@ int main(int argc, const char **argv) {
   bool showHelp = false;
   cli.add_argument(help(showHelp));
   cli.add_argument(lyra::opt(args_canInterface, "can-interface" )["-i"]["--can-interface"]("The can interface to connect to"));
-  cli.add_argument(lyra::opt(args_canInterface, "client-device-id" )["-d"]["--client-device-id"]("The sot device id of the client to connect to"));
+  cli.add_argument(lyra::opt(args_clientDeviceId, "client-device-id" )["-d"]["--client-device-id"]("The sot device id of the client to connect to"));
+  cli.add_argument(lyra::opt(loopDelayMs, "ms" )["-w"]["--wait-loop-delay"]("The delay in ms for each main loop iteration (between send/receive packages)"));
   auto cli_result = cli.parse({argc, argv});
   if (!cli_result){
     std::cerr << "Error in command line: " << cli_result.message() << std::endl;
@@ -86,6 +88,6 @@ int main(int argc, const char **argv) {
 
 
     // wait
-    this_thread::sleep_for(1ms);
+    this_thread::sleep_for(std::chrono::milliseconds(loopDelayMs));
   }
 }

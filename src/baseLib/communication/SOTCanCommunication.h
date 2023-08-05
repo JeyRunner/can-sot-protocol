@@ -35,7 +35,7 @@ class SOTCanCommunication {
     uint8_t myDeviceId = 0;
 
     static bool checkPackageDataSize(const CanFrame &frame, uint8_t expectedDataSize) {
-      if (frame.dataLength != expectedDataSize) {
+      if (frame.dataLength < expectedDataSize) {  // @todo do more strict size check with ==
         logError("received Can Frame data size %d bytes has not expected size of %d", frame.dataLength, expectedDataSize);
         return false;
       }

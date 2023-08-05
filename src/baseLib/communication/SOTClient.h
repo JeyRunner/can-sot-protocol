@@ -154,7 +154,7 @@ protected:
     }
 
 
-private:
+public:
     inline void sendValue(ValueNodeAbstract &vNode) {
         sendWriteNodeValueRequest(vNode, masterDeviceId);
     }

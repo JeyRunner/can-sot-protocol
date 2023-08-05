@@ -1,4 +1,6 @@
-#include "OTNode.h"
+//#include "OTNode.h"
+
+// THIS HAS TO BE A HEADER, OTHERWISE ON STM32 WE GET AN HARD FAULT WHEN CALLING ONE OF THESE FUNCTIONS
 
 const uint8_t ValueNodeAbstract::getRequiredDataSizeInBytes() const {
   switch (dataType) {
@@ -8,7 +10,10 @@ const uint8_t ValueNodeAbstract::getRequiredDataSizeInBytes() const {
       return 2;
     case VALUE_NODE_DATA_TYPES::F32:
       return 4;
+    default:
+     return 255;
   }
+  return 255;
 }
 
 void ValueNodeAbstract::writeToData(uint8_t *data) {

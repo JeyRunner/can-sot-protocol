@@ -43,18 +43,18 @@ class ValueNodeAbstract {
     EventFlag receivedValueUpdate;
 
   public:
-    const uint8_t getRequiredDataSizeInBytes() const;
+    inline const uint8_t getRequiredDataSizeInBytes() const;
 
     /**
      * Write value to data of a can frame.
      */
-    void writeToData(uint8_t *data);
+    inline void writeToData(uint8_t *data);
 
     /**
      * Write value to data of a can frame.
      */
     template<uint8_t SIZE>
-    void writeToData(CanData<SIZE> data) {
+    inline void writeToData(CanData<SIZE> data) {
       writeToData(data);
     }
 
@@ -63,14 +63,14 @@ class ValueNodeAbstract {
      * This will overwrite the current value of the node.
      * This will also set the wasChangedEvent to true.
      */
-    void readFromData(const uint8_t *data);
+    inline void readFromData(const uint8_t *data);
 
     /**
      * Read value from data of a can frame.
      * This will overwrite the current value of the node.
      */
     template<uint8_t SIZE>
-    void readFromData(CanData<SIZE> data) {
+    inline void readFromData(CanData<SIZE> data) {
       readFromData(data);
     }
 
@@ -192,6 +192,10 @@ class ValueNodeReadWriteable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNI
       return ((ValueNodeTypeAbstract<TYPE>*) this)->value;
     }
 };
+
+
+// HAS TO BE INCLUDED AT THE END
+#include "OTNodeValueNodeAbstractImpl.h"
 
 
 

@@ -1,9 +1,9 @@
 #pragma once
 
 #define RETURN_IF_FALSE(check) if (!check) {return;};
-#define RESULT_WHEN_ERR_RETURN(result) if (result.status == ERROR) {return;};
+#define RESULT_WHEN_ERR_RETURN(result) if (result.status == RESULT::ERROR) {return;};
 
-enum RESULT {
+enum class RESULT {
     OK,
     ERROR
 };
@@ -17,14 +17,14 @@ struct Result {
     static Result Error() {
       return Result<T> {
         ._ = T(),
-        .status = ERROR
+        .status = RESULT::ERROR
       };
     }
 
     static Result Ok(T &value) {
       return Result<T> {
         ._ = value,
-        .status = OK
+        .status = RESULT::OK
       };
     }
 };
