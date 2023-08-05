@@ -2,7 +2,10 @@
 
 #include <stdio.h>
 
-constexpr bool DEBUG = true;
+//constexpr bool DEBUG = false;
+#ifndef SOT_DEBUG
+#define SOT_DEBUG true
+#endif
 
 /*
 #define logInfo(fmt, ...) \
@@ -14,7 +17,7 @@ constexpr bool DEBUG = true;
             */
 
 template<typename... Args> inline void logWarn(const char *f, Args... args) {
-  if constexpr (DEBUG) {
+  if constexpr (SOT_DEBUG) {
     printf("[WARN] ");
     printf(f, args...);
     printf("\n");
@@ -22,7 +25,7 @@ template<typename... Args> inline void logWarn(const char *f, Args... args) {
 }
 
 template<typename... Args> inline void logError(const char *f, Args... args) {
-  if constexpr (DEBUG) {
+  if constexpr (SOT_DEBUG) {
     printf("[WARN] ");
     printf(f, args...);
     printf("\n");

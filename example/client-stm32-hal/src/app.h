@@ -1,16 +1,17 @@
-#include <stm32f1xx_hal_can.h>
-#include "cubeMxGenerated/Inc/stm32f1xx_it.h"
-//#include "main.h"
+// disable all debug messages of can sot so reduce binary size
+#define SOT_DEBUG false
 
-//#include <stm32_hal/can_stm32.h>
+#include "cubeMxGenerated/Inc/stm32f1xx_it.h"
+#include <stm32f1xx_hal_can.h>
 #include <stm32_hal/Stm32HalCanInterface.hpp>
 #include <communication/SOTClient.h>
 #include "protocol_generated/SOTProtocol.hpp"
 
-/// set in main.cpp
+/// the handle to the used can, set in main.cpp
 extern CAN_HandleTypeDef hcan;
 
 
+/// just for some testing
 void sendTestFrame(Stm32HalCanInterface &canInterface) {
     // test send frame
     uint8_t data[1] = {1};
@@ -28,31 +29,10 @@ void sendTestFrame(Stm32HalCanInterface &canInterface) {
  * @return
  */
 int runApp()
-        /*
 {
-  // main communication loop
-  while (1) {
-    // wait
-    HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-    HAL_Delay(1000);
-  }
-  return 0;
-}*/
-
-{
-  // main communication loop
-  /*
-  while (true) {
-      // wait
-      HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
-      HAL_Delay(1000);
-  }
-  return 0;
-  */
-
-
-  Stm32HalCanInterface canInterface(1, hcan);
-  SOTClient<TestProtocol, Stm32HalCanInterface> sotClient(canInterface, 1);
+  uint8_t ownSOTDeviceId = 1;
+  Stm32HalCanInterface canInterface(ownSOTDeviceId, hcan);
+  SOTClient<TestProtocol, Stm32HalCanInterface> sotClient(canInterface, ownSOTDeviceId);
   canInterface.startCanInterface();
 
 
@@ -61,16 +41,6 @@ int runApp()
   sotClient.getProtocol().objectTree.settings.value1.write(5);
   sotClient.getProtocol().objectTree.settings.value2.write(10);
   sotClient.getProtocol().objectTree.settings.subSettings.value3.write(0.25);
-
-
-  // test
-  sendTestFrame(canInterface);
-  TestProtocol<SOTClient<TestProtocol, Stm32HalCanInterface>> p(&sotClient);
-  auto d = p.objectTree.settings.value1.getTestVal();
-  uint8_t data[8];
-  p.objectTree.settings.value1.writeToData(data);
-    uint8_t bytesNum = p.objectTree.settings.value1.getRequiredDataSizeInBytes();
-  //sotClient.getProtocol().objectTree.settings.value1.write(static_cast<unsigned short>(d));
 
 
 
@@ -97,8 +67,7 @@ int runApp()
     // wait
     HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
     //sendTestFrame(canInterface);
-
-    HAL_Delay(500);
+    //HAL_Delay(500);
   }
 
   return 0;

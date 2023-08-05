@@ -107,11 +107,11 @@ class Stm32HalCanInterface: public CanInterface {
 
 
     static void handleTxOverflow() {
-        // @todo implement
+        // @todo implement: handle TxOverflow
     }
 
     static void handleRxOverflow() {
-        // @todo implement
+        // @todo implement: handle RxOverflow
     }
 
 

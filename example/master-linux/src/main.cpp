@@ -11,7 +11,7 @@ using namespace std;
 // cli args
 string args_canInterface = "can0";
 uint8_t  args_clientDeviceId = 1;
-unsigned int loopDelayMs = 1;
+float loopDelayMs = 1;
 
 
 int main(int argc, const char **argv) {
@@ -88,6 +88,8 @@ int main(int argc, const char **argv) {
 
 
     // wait
-    this_thread::sleep_for(std::chrono::milliseconds(loopDelayMs));
+    int waitUs = (unsigned int) (loopDelayMs * 1000.0);
+    this_thread::sleep_for(std::chrono::microseconds(waitUs));
+    //cout << waitUs << endl;
   }
 }
