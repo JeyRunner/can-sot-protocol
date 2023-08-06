@@ -19,10 +19,10 @@ struct CanFrameWithData {
 
 
 #ifndef CAN_TX_BUFFER_LEN
-#define CAN_TX_BUFFER_LEN 4
+#define CAN_TX_BUFFER_LEN 10
 #endif
 #ifndef CAN_RX_BUFFER_LEN
-#define CAN_RX_BUFFER_LEN 4
+#define CAN_RX_BUFFER_LEN 10
 #endif
 
 /// enable interrupt for can tx ready
@@ -40,7 +40,7 @@ inline static void onCanRxInterruptDisable();
 /**
  * Driver for stm32 microcontrollers (currently supports stm32F1) using the stm32 HAL interface.
  * The size (number of packages) of the send end receive buffers can be set by defining the macros: CAN_TX_BUFFER_LEN, CAN_RX_BUFFER_LEN.
- * When no buffer size are specified, the default size for both buffers is 4 packages.
+ * When no buffer size are specified, the default size for both buffers is 10 packages.
  * @note Just one instance of this class is allowed to exists at time.
  */
 //template<uint16_t CAN_TX_BUFFER_LEN, uint16_t CAN_RX_BUFFER_LEN>
@@ -112,6 +112,7 @@ class Stm32HalCanInterface: public CanInterface {
 
     static void handleRxOverflow() {
         // @todo implement: handle RxOverflow
+
     }
 
 
@@ -136,6 +137,10 @@ class Stm32HalCanInterface: public CanInterface {
             });
             memcpy(txBuffer.back().data, frame.data, frame.dataLength);
             onCanTxReadyInterruptEnable();
+        }
+        else {
+          // try to also send remaining frames in buffer
+          trySendAllTxFramesFromBuffer();
         }
         return true;
     }
@@ -170,11 +175,14 @@ class Stm32HalCanInterface: public CanInterface {
     }
 
     /**
-     * Send can frame
+     * Send can frame directly, when currently the hardware send queue is full return false.
      * @return true if successful.
      */
     template<class T>
     static inline bool sendTxFrame(T &frame) {
+        if (canSendQueueFull()) {
+          return false;
+        }
         CAN_TxHeaderTypeDef  txHeader;
         txHeader.DLC = frame.dataLength;
         txHeader.ExtId = 0;
@@ -206,6 +214,21 @@ class Stm32HalCanInterface: public CanInterface {
     }
 
 
+    /// try to send all frames from rx buffer, if something fails abort
+    static void trySendAllTxFramesFromBuffer() {
+      onCanTxReadyInterruptDisable();
+      while (!canSendQueueFull() && !txBuffer.empty()) {
+        if (sendTxFrame(txBuffer.front())) {
+          txBuffer.pop();
+        }
+        else {
+          break;
+        }
+      }
+      onCanTxReadyInterruptEnable();
+    }
+
+
     static void putRxFrameInBuffer(CAN_HandleTypeDef *hcan) {
         onCanRxInterruptDisable();
         if (!rxBuffer.full()) {
@@ -217,10 +240,49 @@ class Stm32HalCanInterface: public CanInterface {
             frame.canId = rxHeader.StdId;
         }
         else {
+            // read it anyway so that the rx queue of the hardware does not overflow
+            CAN_RxHeaderTypeDef  rxHeader;
+            uint8_t data[8];
+            HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, data);
             handleRxOverflow();
         }
         onCanRxInterruptEnable();
     }
+
+  private:
+    static inline uint32_t LL_SYSTICK_IsActiveCounterFlag()
+    {
+      return ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == (SysTick_CTRL_COUNTFLAG_Msk));
+    }
+
+
+  public:
+    /// get number of packages in rx buffer
+    unsigned int getRxBufferNumPackages() {
+      return rxBuffer.size();
+    }
+    /// get number of packages in tx buffer
+    unsigned int getTxBufferNumPackages() {
+      return txBuffer.size();
+    }
+
+
+
+    /// get current relative time in microseconds
+    uint32_t getCurrentMicros()
+    {
+      /* Ensure COUNTFLAG is reset by reading SysTick control and status register */
+      LL_SYSTICK_IsActiveCounterFlag();
+      uint32_t m = HAL_GetTick();
+      const uint32_t tms = SysTick->LOAD + 1;
+      __IO uint32_t u = tms - SysTick->VAL;
+      if (LL_SYSTICK_IsActiveCounterFlag()) {
+        m = HAL_GetTick();
+        u = tms - SysTick->VAL;
+      }
+      return (m * 1000 + (u * 1000) / tms);
+    }
+
 };
 
 CAN_HandleTypeDef Stm32HalCanInterface::hcan;

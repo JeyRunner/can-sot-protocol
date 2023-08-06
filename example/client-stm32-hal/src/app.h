@@ -46,8 +46,22 @@ int runApp()
 
   // main communication loop
   while (true) {
+    // set debug values
+    sotClient.getProtocol().objectTree.debug.clientRxBufferNumPackages.write(canInterface.getRxBufferNumPackages());
+    sotClient.getProtocol().objectTree.debug.clientTxBufferNumPackages.write(canInterface.getTxBufferNumPackages());
+
+    // measure timing
+    uint32_t startUs = canInterface.getCurrentMicros();
+    HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_SET);
+
     // handle all received can frames
     sotClient.processCanFrames();
+
+    // measure timing
+    uint32_t endUs = canInterface.getCurrentMicros();
+    HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_RESET);
+    sotClient.getProtocol().objectTree.debug.clientProcessPackagesDurationMs.write((float)(endUs - startUs) / 1000.0);
+
 
     // on first connected
     if (sotClient.gotConnectedEvent.checkAndReset()) {
@@ -63,11 +77,19 @@ int runApp()
             sotClient.getProtocol().objectTree.settings.subSettings.value3.read()+0.001
     );
 
+    // testing
+    if (sotClient.isConnected()) {
+      for (int i = 0; i < 0; ++i) {
+        //sendTestFrame(canInterface);
+        sotClient.getProtocol().objectTree.debug.clientTxBufferNumPackages.sendValue();
+      }
+    }
+
 
     // wait
-    HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
+    //HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
     //sendTestFrame(canInterface);
-    //HAL_Delay(500);
+    HAL_Delay(1);
   }
 
   return 0;

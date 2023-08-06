@@ -76,10 +76,24 @@ int main(int argc, const char **argv) {
     if (sotClient.protocol.objectTree.settings.subSettings.value3.receivedValueUpdate.checkAndReset()) {
       cout << "got value from client: settings.subSettings.value3 = " << sotClient.protocol.objectTree.settings.subSettings.value3.read() << endl;
     }
+    if (sotClient.protocol.objectTree.debug.clientRxBufferNumPackages.receivedValueUpdate.checkAndReset()) {
+      cout << "got debug.clientRxBufferNumPackages = " << sotClient.protocol.objectTree.debug.clientRxBufferNumPackages.read() << endl;
+    }
+    if (sotClient.protocol.objectTree.debug.clientTxBufferNumPackages.receivedValueUpdate.checkAndReset()) {
+      cout << "got debug.clientTxBufferNumPackages = " << sotClient.protocol.objectTree.debug.clientTxBufferNumPackages.read() << endl;
+    }
+    if (sotClient.protocol.objectTree.debug.clientProcessPackagesDurationMs.receivedValueUpdate.checkAndReset()) {
+      cout << "got debug.clientProcessPackagesDurationMs = " << sotClient.protocol.objectTree.debug.clientProcessPackagesDurationMs.read() << endl;
+    }
 
 
     // read some value from client
     sotClient.protocol.objectTree.settings.subSettings.value3.sendReadValueReq();
+    sotClient.protocol.objectTree.debug.clientRxBufferNumPackages.sendReadValueReq();
+    sotClient.protocol.objectTree.debug.clientTxBufferNumPackages.sendReadValueReq();
+    sotClient.protocol.objectTree.debug.clientProcessPackagesDurationMs.sendReadValueReq();
+
+
 
 
     auto timeEnd = std::chrono::system_clock::now();

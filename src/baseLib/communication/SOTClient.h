@@ -162,4 +162,13 @@ public:
     inline void sendValueNodeRead(ValueNodeAbstract &vNode) {
         sendReadNodeValueRequest(&vNode, masterDeviceId);
     }
+
+
+    /**
+     * Return true if currently connected to master.
+     */
+    bool isConnected() {
+      return communicationState == SOT_COMMUNICATION_STATE::INITIALIZED;
+    }
+
 };

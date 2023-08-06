@@ -6,11 +6,13 @@
 #include "objectTree/ProtocolDef.h"
 
 template<typename COMC>
-struct TestProtocol: public ProtocolDef<COMC, 4,1> {
+struct TestProtocol: public ProtocolDef<COMC, 7, 1> {
     struct MyObjectTree : public Node {
         struct _Meta : Node {
             ValueNodeReadWriteable<TYPE_UINT8, 0, COMC> protocolVersion;
         } _meta;
+
+
 
         struct Settings : Node {
             ValueNodeReadWriteable<TYPE_UINT16, 1, COMC> value1;
@@ -24,16 +26,25 @@ struct TestProtocol: public ProtocolDef<COMC, 4,1> {
 
         } settings;
 
-        //ValueNodeTypeAbstractWithProt<TYPE_F32, COMC> testNode = 1;
+
+        struct Debug : Node {
+            ValueNodeReadWriteable<TYPE_UINT16, 4, COMC> clientRxBufferNumPackages;
+            ValueNodeReadWriteable<TYPE_UINT16, 5, COMC> clientTxBufferNumPackages;
+            ValueNodeReadWriteable<TYPE_F32, 6, COMC> clientProcessPackagesDurationMs;
+        } debug;
+
     } objectTree;
 
 
     /// the index is the node id belonging to the referenced node value
-    OTNodeIDsTable<4> otNodeIDsTable = {
+    OTNodeIDsTable<7> otNodeIDsTable = {
             valueNodeAsAbstract(objectTree._meta.protocolVersion),
             valueNodeAsAbstract(objectTree.settings.value1),
             valueNodeAsAbstract(objectTree.settings.value2),
             valueNodeAsAbstract(objectTree.settings.subSettings.value3),
+            valueNodeAsAbstract(objectTree.debug.clientRxBufferNumPackages),
+            valueNodeAsAbstract(objectTree.debug.clientTxBufferNumPackages),
+            valueNodeAsAbstract(objectTree.debug.clientProcessPackagesDurationMs),
     };
 
 
@@ -47,7 +58,7 @@ struct TestProtocol: public ProtocolDef<COMC, 4,1> {
 
 
     explicit TestProtocol(COMC *sotCanCommunication)
-    : ProtocolDef<COMC, 4,1>(sotCanCommunication) {
+    : ProtocolDef<COMC, 7,1>(sotCanCommunication) {
         // setup all nodevalues
         //valueNodeTypeAbstractWithProt_setProtocolRef(objectTree.testNode, sotCanCommunication);
         //objectTree.testNode.__setProtocolRef(sotCanCommunication);
@@ -55,5 +66,8 @@ struct TestProtocol: public ProtocolDef<COMC, 4,1> {
         objectTree.settings.value1.__setProtocolRef(sotCanCommunication);
         objectTree.settings.value2.__setProtocolRef(sotCanCommunication);
         objectTree.settings.subSettings.value3.__setProtocolRef(sotCanCommunication);
+        objectTree.debug.clientRxBufferNumPackages.__setProtocolRef(sotCanCommunication);
+        objectTree.debug.clientTxBufferNumPackages.__setProtocolRef(sotCanCommunication);
+        objectTree.debug.clientProcessPackagesDurationMs.__setProtocolRef(sotCanCommunication);
     };
 };
