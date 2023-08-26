@@ -90,11 +90,11 @@ static void packCanFrameId(CanFrame &frame, DeviceIdAndSOTMessageType idAndType)
 
 
 enum COMMUNICATION_ERROR_TYPES {
-    /// microcontroller is not fast enough to respond to all incoming can requests.
-    CAN_REQUESTS_TO_FAST,
-
     /// microcontroller is not fast enough to progress all incoming can requests.
-    CAN_RECEIVE_OVERFLOW,
+    CAN_RECEIVE_OVERFLOW = 0,
+
+    /// microcontroller tries to send to many request at once.
+    CAN_SEND_OVERFLOW = 1,
 };
 
 enum class INIT_COMMUNICATION_RESPONSE_TYPES {

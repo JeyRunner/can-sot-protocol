@@ -35,7 +35,7 @@ class MockCanBuffer : public CanInterface {
     }
 
 
-    bool canSendFrame(CanFrame &frame) override {
+    bool canSendFrame(CanFrame &frame, bool frameIsOverflowError = false) override {
       putFrameInSendBuffer(frame);
       return true;
     }

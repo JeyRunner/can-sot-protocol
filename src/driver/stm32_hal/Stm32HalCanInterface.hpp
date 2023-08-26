@@ -21,6 +21,9 @@ struct CanFrameWithData {
 #ifndef CAN_TX_BUFFER_LEN
 #define CAN_TX_BUFFER_LEN 10
 #endif
+#ifndef CAN_TX_BUFFER_RESERVED_SPACE_FOR_OVERFLOW_PACKAGES
+#define CAN_TX_BUFFER_RESERVED_SPACE_FOR_OVERFLOW_PACKAGES 1
+#endif
 #ifndef CAN_RX_BUFFER_LEN
 #define CAN_RX_BUFFER_LEN 10
 #endif
@@ -62,6 +65,14 @@ class Stm32HalCanInterface: public CanInterface {
      */
     Stm32HalCanInterface(uint8_t ownDeviceId, const CAN_HandleTypeDef &canHandle) : ownDeviceId(ownDeviceId) {
         hcan = canHandle; // @todo not sure if copy is ok
+    }
+
+    /**
+     * Checks if tx buffer is full. This will return true when still CAN_TX_BUFFER_RESERVED_SPACE_FOR_OVERFLOW_PACKAGES elements can be placed into the buffer.
+     * This reserved space is for sending overflow packages.
+     */
+    static bool txBufferIsFull() {
+      return txBuffer.available() <= CAN_TX_BUFFER_RESERVED_SPACE_FOR_OVERFLOW_PACKAGES;
     }
 
 
@@ -106,30 +117,22 @@ class Stm32HalCanInterface: public CanInterface {
     }
 
 
-    static void handleTxOverflow() {
-        // @todo implement: handle TxOverflow
-    }
-
-    static void handleRxOverflow() {
-        // @todo implement: handle RxOverflow
-
-    }
-
-
     /**
      * Put can frame into the send buffer.
      * @return true if was successfully
      */
-    bool canSendFrame(CanFrame &frame) override {
+    bool canSendFrame(CanFrame &frame, bool frameIsOverflowError=false) override {
         // try to directly send
         if (!sendTxFrame(frame)){
             // send queue is full -> put in buffer
             // protect queue from concurrent access
             onCanTxReadyInterruptDisable();
 
-            if (txBuffer.full()) {
+            if (txBufferIsFull()) {
+              if (!frameIsOverflowError) {
                 handleTxOverflow();
-                return false;
+              }
+              return false;
             }
             txBuffer.push(CanFrameWithData{
                 .canId = frame.canId,

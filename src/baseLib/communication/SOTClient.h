@@ -7,7 +7,7 @@
 #include "objectTree/ObjectTree.h"
 #include "SOTCanCommunication.h"
 #include "util/Result.h"
-
+#include "driver_template/DriverTemplate.hpp"
 
 
 #ifdef DEV_MODE
@@ -24,6 +24,7 @@ class SOTClient: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeValue;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueRequest;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendReadNodeValueResponse;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::canInterface;
     using PROTOCOL = PROTOCOL_DEF<SOTClient<PROTOCOL_DEF, CAN_INTERFACE_CLASS>>;
 
   protected:
@@ -41,6 +42,14 @@ public:
     {
       //canInterface.setSotCanCommunication(this);
       this->myDeviceId = myDeviceId;
+    }
+
+    void processCanFrames() override {
+      // handle overflow errors
+      if (canInterface.onRxOverflow.checkAndReset()) {
+        sendCommunicationError(masterDeviceId, COMMUNICATION_ERROR_TYPES::CAN_RECEIVE_OVERFLOW);
+      }
+      SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::processCanFrames();
     }
 
 

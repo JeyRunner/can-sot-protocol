@@ -22,7 +22,10 @@ file(GLOB_RECURSE baseLibHeaders CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/*.h" "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/**/*.h"
         "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/*.hpp" "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/**/*.hpp"
         )
-file(GLOB_RECURSE baseLibSrc CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/*.cpp" "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/**/*.cpp")
+file(GLOB_RECURSE baseLibSrc CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/*.cpp" "${CMAKE_CURRENT_LIST_DIR}/src/baseLib/**/*.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/src/driver/**/*.cpp"
+        )
 message(STATUS "baseLibSrc: ${baseLibSrc}")
 
 #add_library(${PROJECT_NAME}-baseLib INTERFACE ${baseLibHeaders} ${baseLibSrc})
@@ -30,7 +33,7 @@ add_library(${PROJECT_NAME}-baseLib ${baseLibHeaders} ${baseLibSrc})
 set_target_properties(${PROJECT_NAME}-baseLib PROPERTIES CXX_STANDARD 17)
 target_include_directories(${PROJECT_NAME}-baseLib PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/baseLib/>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/driver>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/driver/>
         )
 target_link_libraries(${PROJECT_NAME}-baseLib PUBLIC etl::etl)
 

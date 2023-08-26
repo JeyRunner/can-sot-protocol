@@ -70,6 +70,7 @@ Afterward, client and master are not connected anymore.
 
 #### Communication Error  &ensp; 🖥️ 🔄 🎚
 On device sends this to the other device its communicating with to indicate there is a general communication error/problem.
+Error regarding buffer overflows are currently only send form client to server.
 
 | SOT Message ID (5 bit) | Data 1 byte                                                                                        |
 |------------------------|----------------------------------------------------------------------------------------------------|

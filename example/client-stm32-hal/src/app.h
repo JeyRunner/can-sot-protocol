@@ -16,7 +16,7 @@ void sendTestFrame(Stm32HalCanInterface &canInterface) {
     // test send frame
     uint8_t data[1] = {1};
     CanFrame frame{
-            .canId = 0,
+            .canId = 0xFFFF,
             .data = data,
             .dataLength = 1
     };
@@ -74,15 +74,18 @@ int runApp()
 
     // change some value
     sotClient.getProtocol().objectTree.settings.subSettings.value3.write(
-            sotClient.getProtocol().objectTree.settings.subSettings.value3.read()+0.001
+            sotClient.getProtocol().objectTree.settings.subSettings.value3.read()+0.1
     );
 
-    // testing
+    // testing: send a lot of packages to test tx overflow
     if (sotClient.isConnected()) {
-      for (int i = 0; i < 0; ++i) {
-        //sendTestFrame(canInterface);
+      /*
+      for (int i = 0; i < 10; ++i) {
+        sendTestFrame(canInterface);
+        sotClient.getProtocol().objectTree.debug.clientTxBufferNumPackages.write(canInterface.getTxBufferNumPackages());
         sotClient.getProtocol().objectTree.debug.clientTxBufferNumPackages.sendValue();
       }
+      */
     }
 
 

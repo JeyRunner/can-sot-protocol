@@ -11,6 +11,7 @@
 
 #ifdef IS_MASTER_DEF
 #include "set"
+//#include "DriverTemplate.hpp"
 #endif
 
 
@@ -88,7 +89,7 @@ class SOTCanCommunication {
       uint8_t dataSize = 1;
       uint8_t data[dataSize];
       data[0] = error;
-      sendMessage(SOT_MESSAGE_TYPE::COMMUNICATION_ERROR, targetDeviceId, data, dataSize);
+      sendMessage(SOT_MESSAGE_TYPE::COMMUNICATION_ERROR, targetDeviceId, data, dataSize, true);
     }
 
 
@@ -120,7 +121,7 @@ class SOTCanCommunication {
 
 
 
-    void sendMessage(SOT_MESSAGE_TYPE type, uint8_t targetDeviceId, uint8_t *data, uint8_t dataSize) {
+    void sendMessage(SOT_MESSAGE_TYPE type, uint8_t targetDeviceId, uint8_t *data, uint8_t dataSize, bool frameIsOverflowError = false) {
       CanFrame frame;
       packCanFrameId(frame, DeviceIdAndSOTMessageType{
           .sourceDeviceId = myDeviceId,
@@ -130,7 +131,15 @@ class SOTCanCommunication {
       frame.data = data;
       frame.dataLength = dataSize;
       //canSendFrame(frame);
-      canInterface.canSendFrame(frame);
+      bool ok = canInterface.canSendFrame(frame);
+
+      // if !ok and
+      if (!frameIsOverflowError) {
+        // handle overflow errors
+        if (canInterface.onTxOverflow.checkAndReset()) {
+          sendCommunicationError(targetDeviceId, COMMUNICATION_ERROR_TYPES::CAN_SEND_OVERFLOW);
+        }
+      }
     }
 
 
@@ -155,7 +164,7 @@ public:
      * Handle responses, writes values to OT.
      * This has to be called periodically, so that the can receive buffer does not flow over.
      */
-    void processCanFrames() {
+    virtual void processCanFrames() {
       uint8_t data[8] = {};
       CanFrame frame;
       frame.data = data;

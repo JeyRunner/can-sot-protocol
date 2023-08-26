@@ -53,6 +53,8 @@ class SocketCanInterface : public CanInterface {
         return false;
       }
 
+      // @todo add filter for only master dest address
+
       // init can addr struct with zero
       sockaddr_can addr{};
       memset(&addr, 0, sizeof(addr));
@@ -109,7 +111,7 @@ class SocketCanInterface : public CanInterface {
      * Put can frame into the send buffer.
      * @return true if was successfully
      */
-    bool canSendFrame(CanFrame &frame) override {
+    bool canSendFrame(CanFrame &frame, bool frameIsOverflowError = false) override {
       if (!socketConnected) {
         cout << "could not send can frame since can socket is not connected" << endl;
         return false;

@@ -86,6 +86,14 @@ int main(int argc, const char **argv) {
       cout << "got debug.clientProcessPackagesDurationMs = " << sotClient.protocol.objectTree.debug.clientProcessPackagesDurationMs.read() << endl;
     }
 
+    // check for errors
+    if (sotClient.onCommunicationErrorRxOverflow.checkAndReset()) {
+      cerr << "!!!!!! got communication error from client:  RxOverflow !!!!!!!" << endl;
+    }
+    if (sotClient.onCommunicationErrorTxOverflow.checkAndReset()) {
+      cerr << "!!!!!! got communication error from client:  TxOverflow !!!!!!!" << endl;
+    }
+
 
     // read some value from client
     sotClient.protocol.objectTree.settings.subSettings.value3.sendReadValueReq();

@@ -23,6 +23,13 @@ struct ConnectedClient {
     /// event flag is set when client is successfully connected to this master
     EventFlag gotConnectedEvent;
 
+    /// event flag is set when client has an overflow in the send packages queue (-> you should slow down the communication with the client)
+    EventFlag onCommunicationErrorTxOverflow;
+    /// event flag is set when client has an overflow in the received packages queue (the client will not be able to process all packages send by the master)
+    /// (-> you should slow down the communication with the client, reduce frequency of send packages)
+    EventFlag onCommunicationErrorRxOverflow;
+
+
     uint8_t deviceId;
     SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS> *sotMaster = nullptr;
     explicit ConnectedClient() : protocol(this) {}
@@ -111,9 +118,22 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
           break;
         }
 
-        case COMMUNICATION_ERROR:
-          logWarn("Got COMMUNICATION_ERROR");
+        case COMMUNICATION_ERROR: {
+          auto &client = getClient(devIdAndType);
+          RETURN_IF_FALSE(checkPackageDataSize(frame, 1));
+          logWarn("Got COMMUNICATION_ERROR from client");
+          switch (static_cast<COMMUNICATION_ERROR_TYPES>(frame.data[0])) {
+            case CAN_RECEIVE_OVERFLOW:
+              client.onCommunicationErrorRxOverflow._triggerEvent();
+              break;
+            case CAN_SEND_OVERFLOW:
+              client.onCommunicationErrorTxOverflow._triggerEvent();
+              break;
+            default:
+              logWarn("Got COMMUNICATION_ERROR from client with unknown error type: %d", ((unsigned int)frame.data[0]));
+          }
           break;
+        }
 
 
         case WRITE_NODE_VALUE_REQEUST: {
