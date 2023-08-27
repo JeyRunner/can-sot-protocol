@@ -10,7 +10,7 @@ using namespace std;
 
 // cli args
 string args_canInterface = "can0";
-uint8_t  args_clientDeviceId = 1;
+unsigned int args_clientDeviceId = 1;
 float loopDelayMs = 1;
 
 
@@ -37,7 +37,7 @@ int main(int argc, const char **argv) {
 
 
   // create master and connect to client
-  SocketCanInterface canInterface(args_canInterface);
+  SocketCanInterface canInterface(args_canInterface); // own id will be 0 by default
   if (!canInterface.startCanInterface()) {
     exit(1);
   }

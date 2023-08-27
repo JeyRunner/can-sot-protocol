@@ -10,7 +10,7 @@ using namespace std;
 
 // cli args
 string args_canInterface = "can0";
-uint8_t  args_clientDeviceId = 1;
+unsigned int args_clientDeviceId = 1;
 
 
 int main(int argc, const char **argv) {
@@ -19,7 +19,7 @@ int main(int argc, const char **argv) {
   bool showHelp = false;
   cli.add_argument(help(showHelp));
   cli.add_argument(lyra::opt(args_canInterface, "can-interface" )["-i"]["--can-interface"]("The can interface to connect to"));
-  cli.add_argument(lyra::opt(args_canInterface, "client-device-id" )["-d"]["--client-device-id"]("The sot device id of this client"));
+  cli.add_argument(lyra::opt(args_clientDeviceId, "client-device-id" )["-d"]["--client-device-id"]("The sot device id of this client"));
   auto cli_result = cli.parse({argc, argv});
   if (!cli_result){
     std::cerr << "Error in command line: " << cli_result.message() << std::endl;
@@ -35,7 +35,7 @@ int main(int argc, const char **argv) {
 
 
   // create master and connect to client
-  SocketCanInterface canInterface(args_canInterface);
+  SocketCanInterface canInterface(args_canInterface, args_clientDeviceId);
   if (!canInterface.startCanInterface()) {
     exit(1);
   }

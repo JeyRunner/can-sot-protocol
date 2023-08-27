@@ -22,12 +22,18 @@ class SocketCanInterface : public CanInterface {
 
   private:
     std::string canInterfaceName;
+    int8_t ownDeviceId = 0;
     int canSocket = -1;
     bool socketConnected = false;
 
   public:
-    explicit SocketCanInterface(std::string canInterfaceName)
-    : canInterfaceName(std::move(canInterfaceName)) {}
+    /**
+     * Note multiple instances of this class can exists at time.
+     * @param canInterfaceName the name of the linux can interface to use
+     * @param ownDeviceId the device id of this master (is 0 by default)
+     */
+    explicit SocketCanInterface(std::string canInterfaceName, uint8_t ownDeviceId = 0)
+    : canInterfaceName(std::move(canInterfaceName)), ownDeviceId(ownDeviceId) {}
 
     virtual ~SocketCanInterface() {
       closeCanInterface();
@@ -53,7 +59,12 @@ class SocketCanInterface : public CanInterface {
         return false;
       }
 
-      // @todo add filter for only master dest address
+      // add filter for incoming packages for only packages with master dest address
+      if (!setupRxFilter()) {
+        cout << "could not open can socket: could not make socket non-blocking" << endl;
+        closeCanInterface();
+        return false;
+      }
 
       // init can addr struct with zero
       sockaddr_can addr{};
@@ -81,6 +92,20 @@ class SocketCanInterface : public CanInterface {
       return true;
     }
 
+    /// add filter for incoming packages for only packages with master dest address
+    bool setupRxFilter() const {
+      struct can_filter rxFilter[1];
+      uint16_t ownCanID = ((ownDeviceId & 0b000'0000'0111) << 5); // own 11 bit id
+      uint16_t ownCanFilterMaks = ((0b000'0000'0111) << 5); // 11 bit id filter
+      rxFilter[0].can_id = ownCanID;
+      rxFilter[0].can_mask = ownCanFilterMaks;
+      int ok = setsockopt(canSocket, SOL_CAN_RAW, CAN_RAW_FILTER, &rxFilter, sizeof(rxFilter));
+      if (ok != 0) {
+        perror("setsockopt(CAN_RAW_FILTER)");
+        return false;
+      }
+      return true;
+    }
 
     static bool makeSocketNonBlocking(int socked) {
       int flags = fcntl(socked, F_GETFL, 0);
