@@ -92,7 +92,7 @@ int runApp()
     // wait
     //HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
     //sendTestFrame(canInterface);
-    HAL_Delay(1);
+    HAL_Delay(100);
   }
 
   return 0;

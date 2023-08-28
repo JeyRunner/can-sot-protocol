@@ -55,6 +55,11 @@ target_link_libraries(${PROJECT_NAME}-baseLib-tests PRIVATE etl::etl doctest::do
 
 
 
+## Cli Tool ######
+include(${CMAKE_CURRENT_LIST_DIR}/cliTool/CMakeLists.txt)
+
+
+
 ## Example applications ######
 include(${CMAKE_CURRENT_LIST_DIR}/example/master-linux/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/example/client-linux/CMakeLists.txt)

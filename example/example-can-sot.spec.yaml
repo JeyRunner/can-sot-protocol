@@ -53,7 +53,7 @@ object_tree:
             type: float32
             access: r
 
-      !doc
+      #!doc
       - name: temperature
         type: float32
         access: r
