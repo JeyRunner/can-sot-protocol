@@ -28,3 +28,10 @@ void printEl_asWindow(string title, ftxui::Element element) {
 ftxui::Element operator ""_T(const char* str, std::size_t) {
   return ftxui::text(string{str});
 }
+
+
+static string firstCharToUpper(string input) {
+    string o = input;
+    o.at(0) = toupper(o.c_str()[0]);
+    return o;
+}

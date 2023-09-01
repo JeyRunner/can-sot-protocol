@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 
 ## Dependencies ###################
-CPMAddPackage("gh:bfgroup/Lyra#1.6.1")
+CPMAddPackage("gh:bfgroup/Lyra#1.5.1")  # was #1.6.1
 
 
 # Example client application ####

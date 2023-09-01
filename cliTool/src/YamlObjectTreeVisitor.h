@@ -23,6 +23,49 @@ struct ValueNode {
         }
         return valueNode;
     }
+
+    optional<string> getTypeAsCppType() {
+        if (type == "uint8") {
+            return "TYPE_UINT8";
+        }
+        else if (type == "uint16") {
+            return "TYPE_UINT16";
+        }
+        else if (type == "float32") {
+            return "TYPE_F32";
+        }
+        else {
+            return nullopt;
+        }
+    }
+
+
+    optional<string> getAccessAsCppValueNodeAccStr(bool fromMasterPerspective) {
+        string readWritable;
+        if (fromMasterPerspective) {
+            if (access == "r") {
+                readWritable = "Readable";
+            }
+            if (access == "w") {
+                readWritable = "Writable";
+            }
+        }
+        else {
+            if (access == "r") {
+                readWritable = "Writable";
+            }
+            if (access == "w") {
+                readWritable = "Readable";
+            }
+        }
+        if (access == "rw") {
+            readWritable = "ReadWritable";
+        }
+        if (readWritable.empty()) {
+            return nullopt;
+        }
+        return readWritable;
+    }
 };
 
 
@@ -30,9 +73,11 @@ class YamlObjectTreeVisitor {
 public:
     struct Context {
         string nodePath;
+        unsigned int nodePathDepthLevel = 0;
         Context withPathAppended(string pathToAppend) {
             Context c = *this;
             c.nodePath += pathToAppend +".";
+            c.nodePathDepthLevel = nodePathDepthLevel+1;
             return c;
         }
     };
@@ -49,7 +94,7 @@ public:
 
 
     void acceptNodeWithChildren(YAML::Node node, Context context) {
-        cout << "-- " << context.nodePath << endl;
+        //cout << "-- " << context.nodePath << endl;
         for (const auto &el : node) {
             //cout << endl<< endl<< el << endl;
 

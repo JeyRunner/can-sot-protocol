@@ -1,6 +1,6 @@
 
 ## Dependencies ###################
-CPMAddPackage("gh:bfgroup/Lyra#1.6.1")
+CPMAddPackage("gh:bfgroup/Lyra#1.5.1")
 CPMAddPackage("gh:ArthurSonzogni/FTXUI@3.0.0")
 #CPMAddPackage("gh:biojppm/rapidyaml@0.5.0")
 CPMAddPackage(
