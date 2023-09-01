@@ -23,6 +23,7 @@ public:
     string code;
     function<string (string valueNodePath)> getIdForValueNode;
     bool forMaster;
+    bool error = false;
 
     void visitNodeWithChildren(string nodeName, YAML::Node objectTreeYamlNode, Context context) override {
         code += string(context.nodePathDepthLevel+1, '\t') + "struct " + firstCharToUpper(nodeName) + ": Node {\n";
@@ -36,12 +37,14 @@ public:
         auto readWritable = valueNode.getAccessAsCppValueNodeAccStr(forMaster);
         if (!readWritable) {
             cout << ">> Error: node '"<< fullPath <<"' has unknown access value, allowed are: r, w, rw" << endl;
+            error = true;
         }
         auto type = valueNode.getTypeAsCppType();
         if (!type) {
             cout << ">> Error: node '"<< fullPath <<"' has unknown type value, allowed are: uint8, uint16, float32" << endl;
             cout << ">> !! HANDLING ENUMS IS NOT IMPLEMENTED -> set this to uint8!" << endl;
             type = "TYPE_UINT8";
+            error = true;
         }
         code += string(context.nodePathDepthLevel+2, '\t') + insertIntoTemplate(genCodeTemplate_ValueNode, {
             {"READ_WRITABLE", readWritable.value()},
@@ -108,6 +111,11 @@ class GenCode{
           {"NODES_TO_SEND_ON_INIT_TABLE_SIZE", "0"}, // @todo
           {"NODES_TO_SEND_ON_INIT_TABLE_CONTENT", ""}, // @todo
       });
+
+      if (genObjectTreeCode.error) {
+          printEl(hbox({">> "_T | bold, text("there were errors, will not save generated code")}) | color(Color::Red));
+          return;
+      }
 
       printEl(hbox({">> "_T | bold, text("generated code ("+ to_string(header.size())+" characters)")}) | color(Color::Green));
       //cout << header << endl;

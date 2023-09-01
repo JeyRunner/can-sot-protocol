@@ -132,5 +132,5 @@ while (true) {
 |--------|---------------------|-----------------|:-----------------------------------------------|
 | master | linux [`socketCAN`] | 🏗️ in progress | [client-linux](example%2Fclient-linux)         |
 | client | linux [`socketCAN`] | 🏗️ in progress | [master-linux](example%2Fmaster-linux)         |
-| client | esp32 [`ESP-IDF`]   | 🏗️ in progress | [client-stm32-hal](example%2Fclient-stm32-hal) |
-| client | stm32 [`STM32 HAL`] | ✍🏻 planned     |                                                |
+| client | stm32 [`STM32 HAL`] | 🏗️ in progress | [client-stm32-hal](example%2Fclient-stm32-hal) |
+| client | esp32 [`ESP-IDF`]   | ✍🏻 planned     |                                                |

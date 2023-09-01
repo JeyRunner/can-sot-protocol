@@ -24,7 +24,7 @@ int main(int argc, const char **argv) {
   cli.add_argument(lyra::opt(loopDelayMs, "ms" )["-w"]["--wait-loop-delay"]("The delay in ms for each main loop iteration (between send/receive packages)"));
   auto cli_result = cli.parse({argc, argv});
   if (!cli_result){
-    std::cerr << "Error in command line: " << cli_result.message() << std::endl;
+    std::cerr << "Error in command line: " << cli_result.errorMessage() << std::endl;
     exit(1);
   }
   if (showHelp){
