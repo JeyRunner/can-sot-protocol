@@ -14,8 +14,14 @@ static std::string genCodeTemplateHeaderContent = R"(
 #include <objectTree/OTDeclares.h>
 #include <objectTree/ProtocolDef.h>
 
+namespace @@PROTOCOL_CLASS_NAME@@ {
+
+@@ENUM_DEFS@@
+
+
 /**
  * Protocol Definition for @@PROTOCOL_CLASS_NAME@@.
+ * For the @@GENERATION_TARGET@@.
  */
 template<typename COMC>
 struct @@PROTOCOL_CLASS_NAME@@: public ProtocolDef<COMC, @@NODE_ID_TABLE_SIZE@@, @@NODES_TO_SEND_ON_INIT_TABLE_SIZE@@> {
@@ -46,6 +52,9 @@ struct @@PROTOCOL_CLASS_NAME@@: public ProtocolDef<COMC, @@NODE_ID_TABLE_SIZE@@,
 @@CONSTRUCTOR_SETUP_ALL_NODE_VALUES@@
     };
 };
+
+
+}
 )";
 
 

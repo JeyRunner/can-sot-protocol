@@ -22,6 +22,7 @@ class GenObjectTreeCode: public YamlObjectTreeVisitor {
 public:
     string code;
     function<string (string valueNodePath)> getIdForValueNode;
+    function<bool (string enumName)> checkIfEnumIsDefined;
     bool forMaster;
     bool error = false;
 
@@ -40,15 +41,25 @@ public:
             error = true;
         }
         auto type = valueNode.getTypeAsCppType();
+        string typeStr = "";
+        string readWritableStr = readWritable.value();
         if (!type) {
-            cout << ">> Error: node '"<< fullPath <<"' has unknown type value, allowed are: uint8, uint16, float32" << endl;
-            cout << ">> !! HANDLING ENUMS IS NOT IMPLEMENTED -> set this to uint8!" << endl;
-            type = "TYPE_UINT8";
-            error = true;
+            // if its enum
+            if (checkIfEnumIsDefined(valueNode.type)) {
+                typeStr = valueNode.type;
+                readWritableStr += "Enum";
+            }
+            else {
+                cout << ">> Error: node '"<< fullPath <<"' has unknown type value, allowed are: uint8, uint16, float32 or a defined enum" << endl;
+                error = true;
+            }
+        }
+        else {
+            typeStr = type.value();
         }
         code += string(context.nodePathDepthLevel+2, '\t') + insertIntoTemplate(genCodeTemplate_ValueNode, {
-            {"READ_WRITABLE", readWritable.value()},
-            {"TYPE", type.value()},
+            {"READ_WRITABLE", readWritableStr},
+            {"TYPE", typeStr},
             {"ID", getIdForValueNode(fullPath)},
             {"NAME", valueNode.name},
         });
@@ -64,18 +75,21 @@ class GenCode{
 
   private:
     GenObjectTreeCode genObjectTreeCode;
+    set<string> definedEnums;
 
   public:
     GenCode(CliArgs::GenProtocolCodeCommand cliArgs)
     : cliArgs(cliArgs) {
         // (bind(&GenCode::getIdForValueNode, *this, std::placeholders::_1));
         genObjectTreeCode.getIdForValueNode = [this](auto && PH1) { return getIdForValueNode(std::forward<decltype(PH1)>(PH1)); };
+        genObjectTreeCode.checkIfEnumIsDefined = [this](auto && PH1) { return checkIfEnumIsDefined(std::forward<decltype(PH1)>(PH1)); };
     }
 
 
     void genCode(vector<string> cliCmd) {
       string argsString;
       for (auto a : cliCmd) {argsString += a + " ";}
+      string genTarget = cliArgs.forMaster ? "master" : "client";
 
       //printTest();
       printEl(hbox({">> "_T | bold, "will generate def file from spec file ... "_T}));
@@ -84,7 +98,7 @@ class GenCode{
           hbox({text(L" inputDefFileName:       "),text(cliArgs.inputDefFileName) | bold}) | color(Color::Green),
           hbox({text(L" outputHeaderFileName:   "),text(cliArgs.outputHeaderFileName) | bold}) | color(Color::Green),
           hbox({text(L" protocol name:          "),text(protocolName) | bold}) | color(Color::Green),
-          hbox({text(L" generate for:           "),text(cliArgs.forMaster ? "master" : "client") | bold}) | color(Color::Green),
+          hbox({text(L" generate for:           "),text(genTarget) | bold}) | color(Color::Green),
       }));
       genObjectTreeCode.forMaster = cliArgs.forMaster;
 
@@ -96,14 +110,19 @@ class GenCode{
       }
       cout << YAML::Node(valueNodeIds) << endl;
 
+      // gen enum defs and save enum names
+      string enumDefsCode = genEnumDefs(spec["global_defs"]["enums"]);
+
       // gen code for object tree
+      spec["object_tree"].push_back(spec["object_tree_predefined"]);
       genObjectTreeCode.acceptObjectTree(spec["object_tree"]);
-      // @todo handle enums
 
       // insert all
       string header = insertIntoTemplate(genCodeTemplateHeaderContent, {
           {"GENERATED_CMD", argsString},
+          {"GENERATION_TARGET", genTarget},
           {"PROTOCOL_CLASS_NAME", firstCharToUpper(protocolName)},
+          {"ENUM_DEFS", enumDefsCode},
           {"OBJECT_TREE", genObjectTreeCode.code},
           {"NODE_ID_TABLE_SIZE", to_string(valueNodeIds.size())},
           {"NODE_ID_TABLE_CONTENT", genOtNodeIDsTableContent()},
@@ -114,7 +133,7 @@ class GenCode{
 
       if (genObjectTreeCode.error) {
           printEl(hbox({">> "_T | bold, text("there were errors, will not save generated code")}) | color(Color::Red));
-          return;
+          //return;
       }
 
       printEl(hbox({">> "_T | bold, text("generated code ("+ to_string(header.size())+" characters)")}) | color(Color::Green));
@@ -128,9 +147,39 @@ class GenCode{
 
 
 
+    string genEnumDefs(YAML::Node enumDefYaml) {
+        if (!enumDefYaml.IsSequence()) {
+            printEl(hbox({">> Error: "_T | bold, text("global_defs.enums has to be a list, but its not.")}) | color(Color::Red));
+            throw runtime_error("gen enum defs");
+        }
+        string t;
+        for (const auto &enumDef: enumDefYaml) {
+            if (!enumDef.IsMap() || enumDef.size() != 1) {
+                printEl(hbox({">> Error: "_T | bold, text("global_defs.enums elements have to be objects with a single key which is the enum name.")}) | color(Color::Red));
+                throw runtime_error("gen enum defs");
+            }
+            if (!enumDef.begin()->second.IsMap()) {
+                printEl(hbox({">> Error: "_T | bold, text("global_defs.enums should be like: {ENUM_NAME: {VAL1: 1, VAL2: 2}}.")}) | color(Color::Red));
+                throw runtime_error("gen enum defs");
+            }
+            auto name = enumDef.begin()->first.as<string>();
+            if (definedEnums.contains(name)) {
+                throw runtime_error("gen enum defs: enum "+ name+ " was defined multiple times.");
+            }
+            definedEnums.emplace(name);
+            t += "enum class " + name + " {\n";
+            for (auto [enumKey, enumValue]: enumDef.begin()->second.as<map<string, int>>()) {
+                t += "\t" + enumKey + " = " + to_string(enumValue) + ",\n";
+            }
+            t += "};\n";
+        }
+        return t;
+    };
+
     string genOtNodeIDsTableContent() {
         string t;
-        for (auto [path, id] : valueNodeIds) {
+        for (int i=0; i<valueNodeIds.size(); i++) {
+            auto [path, id] = *std::find_if(valueNodeIds.begin(), valueNodeIds.end(), [&](auto &el){return el.second == to_string(i);});
             t += "\t\t" + insertIntoTemplate(genCodeTemplate_IdTableEntry_noComma, {{"NODE_PATH", path}}) + ",\n";
         }
         return t;
@@ -139,7 +188,7 @@ class GenCode{
     string genConstructorSetup() {
         string t;
         for (auto [path, id] : valueNodeIds) {
-            t += "\t\t" + insertIntoTemplate(genCodeTemplate_ConstructorSetupEntry, {{"NODE_PATH", path}}) + ",\n";
+            t += "\t\t" + insertIntoTemplate(genCodeTemplate_ConstructorSetupEntry, {{"NODE_PATH", "objectTree." + path}}) + ",\n";
         }
         return t;
     }
@@ -155,6 +204,10 @@ class GenCode{
             throw runtime_error("can't find value node id");
         }
         return valueNodeIds[valueNodePath];
+    }
+
+    bool checkIfEnumIsDefined(string enumName) {
+        return definedEnums.contains(enumName);
     }
 
 

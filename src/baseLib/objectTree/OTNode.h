@@ -194,6 +194,44 @@ class ValueNodeReadWriteable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNI
 };
 
 
+// -- Access Types for Enums ----------------------------------------
+template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
+class ValueNodeWritableEnum: public ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS> {
+public:
+    ValueNodeWritableEnum(): ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>(NODE_ID) {
+    };
+    void write(TYPE value) {
+        this->value = value;
+    }
+};
+
+template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
+class ValueNodeReadableEnum: public ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS> {
+public:
+    ValueNodeReadableEnum(): ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>(NODE_ID) {
+    };
+    TYPE read() {
+        return static_cast<TYPE>(((ValueNodeTypeAbstract<TYPE_UINT8>*) this)->value);
+    }
+};
+template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
+class ValueNodeReadWriteableEnum: public ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS> {
+public:
+    ValueNodeReadWriteableEnum(): ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>(NODE_ID) {
+    };
+
+    void write(TYPE value) {
+        this->value = value;
+    }
+
+    TYPE read() {
+        return static_cast<TYPE>(((ValueNodeTypeAbstract<TYPE_UINT8>*) this)->value);
+    }
+};
+
+
+
+
 // HAS TO BE INCLUDED AT THE END
 #include "OTNodeValueNodeAbstractImpl.h"
 

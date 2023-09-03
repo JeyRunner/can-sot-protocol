@@ -6,7 +6,12 @@
 #include "objectTree/ProtocolDef.h"
 
 template<typename COMC>
-struct TestProtocol: public ProtocolDef<COMC, 7, 1> {
+struct TestProtocol: public ProtocolDef<COMC, 8, 1> {
+    enum TEST_ENUM {
+        A,
+        B
+    };
+
     struct MyObjectTree : public Node {
         struct _Meta : Node {
             ValueNodeReadWriteable<TYPE_UINT8, 0, COMC> protocolVersion;
@@ -33,11 +38,12 @@ struct TestProtocol: public ProtocolDef<COMC, 7, 1> {
             ValueNodeReadWriteable<TYPE_F32, 6, COMC> clientProcessPackagesDurationMs;
         } debug;
 
+        ValueNodeReadWriteableEnum<TEST_ENUM, 7, COMC> valueEnum;
     } objectTree;
 
 
     /// the index is the node id belonging to the referenced node value
-    OTNodeIDsTable<7> otNodeIDsTable = {
+    OTNodeIDsTable<8> otNodeIDsTable = {
             valueNodeAsAbstract(objectTree._meta.protocolVersion),
             valueNodeAsAbstract(objectTree.settings.value1),
             valueNodeAsAbstract(objectTree.settings.value2),
@@ -45,6 +51,7 @@ struct TestProtocol: public ProtocolDef<COMC, 7, 1> {
             valueNodeAsAbstract(objectTree.debug.clientRxBufferNumPackages),
             valueNodeAsAbstract(objectTree.debug.clientTxBufferNumPackages),
             valueNodeAsAbstract(objectTree.debug.clientProcessPackagesDurationMs),
+            valueNodeAsAbstract(objectTree.valueEnum),
     };
 
 
@@ -58,7 +65,7 @@ struct TestProtocol: public ProtocolDef<COMC, 7, 1> {
 
 
     explicit TestProtocol(COMC *sotCanCommunication)
-    : ProtocolDef<COMC, 7,1>(sotCanCommunication) {
+    : ProtocolDef<COMC, 8,1>(sotCanCommunication) {
         // setup all nodevalues
         //valueNodeTypeAbstractWithProt_setProtocolRef(objectTree.testNode, sotCanCommunication);
         //objectTree.testNode.__setProtocolRef(sotCanCommunication);
@@ -69,5 +76,6 @@ struct TestProtocol: public ProtocolDef<COMC, 7, 1> {
         objectTree.debug.clientRxBufferNumPackages.__setProtocolRef(sotCanCommunication);
         objectTree.debug.clientTxBufferNumPackages.__setProtocolRef(sotCanCommunication);
         objectTree.debug.clientProcessPackagesDurationMs.__setProtocolRef(sotCanCommunication);
+        objectTree.valueEnum.__setProtocolRef(sotCanCommunication);
     };
 };

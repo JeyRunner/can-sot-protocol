@@ -51,6 +51,30 @@ template<class TYPE> static void testObjectValueWriteRead(TYPE value) {
   CHECK(valueNode2.read() == value);
 }
 
+
+enum TEST_ENUM {
+    A,
+    B,
+    C
+};
+
+void testObjectValueWriteReadEnum(TEST_ENUM value) {
+    uint8_t data[8] = {0};
+    ValueNodeReadWriteableEnum<TEST_ENUM, 0, SOTDummyClient> valueNode;
+    ValueNodeReadWriteableEnum<TEST_ENUM, 0, SOTDummyClient> valueNode2;
+    valueNode.write(value);
+    CHECK(valueNode.read() == value);
+
+    valueNode.writeToData(data);
+
+    valueNode2.readFromData(data);
+    CHECK(valueNode2.read() == value);
+}
+
+
+
+
+
 TEST_CASE("test object value to binary and back") {
   SUBCASE("UInt8") {
     testObjectValueWriteRead<TYPE_UINT8>(55);
@@ -60,5 +84,10 @@ TEST_CASE("test object value to binary and back") {
   }
   SUBCASE("F32") {
     testObjectValueWriteRead<TYPE_F32>(112.33);
+  }
+  SUBCASE("ENUM") {
+      testObjectValueWriteReadEnum(TEST_ENUM::A);
+      testObjectValueWriteReadEnum(TEST_ENUM::B);
+      testObjectValueWriteReadEnum(TEST_ENUM::C);
   }
 }

@@ -12,8 +12,11 @@ int main(int argc, const char **argv) {
   CliArgs cliArgs;
   cliArgs.parse(argc, argv);
   std::vector<std::string> argList;
-  for(int i=0; i<argc; i++)
-    argList.emplace_back(argv[i]);
+  for(int i=0; i<argc; i++) {
+      argList.emplace_back(argv[i]);
+  }
+  // replace executable name
+  argList[0] = "canSotCli";
 
   if (cliArgs.genProtocolSpecCommand.doCommand) {
     GenDefFile genDefFile(cliArgs.genProtocolSpecCommand);
