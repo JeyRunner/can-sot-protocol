@@ -8,6 +8,8 @@ Although it uses ideas from CANopen, it is not compatible with it but can be see
 
 In the network there are multiple clients and one master.
 The whole communication structure (Object Tree and Real Time Packages) a client offers is specified in a yaml file (example: [example-can-sot.spec.yaml](example/example-can-sot.spec.yaml)).
+This file is used to generate the required protocol code for master and client. 
+See [cliTool/README.md](cliTool%2FREADME.md) for how to use spec.yaml files for protocol code generation.
 
 ### Object Tree
 
@@ -134,3 +136,35 @@ while (true) {
 | client | linux [`socketCAN`] | 🏗️ in progress | [master-linux](example%2Fmaster-linux)         |
 | client | stm32 [`STM32 HAL`] | 🏗️ in progress | [client-stm32-hal](example%2Fclient-stm32-hal) |
 | client | esp32 [`ESP-IDF`]   | ✍🏻 planned     |                                                |
+
+
+### Compile CAN Sot
+To compile CAN Sot for the current host platform (including the cliTool):
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+This will also build the example master and client for the current platform.
+
+### Include in your project
+When want to use CAN Sot in your own project as dependency, you can include it via Cmake.
+Adapt you CMakeLists.txt file as follows:
+```cmake
+# we use CPMAddPackage to download and include CAN Sot from gitlab
+# you need to put CPM.cmake into the cmake/ folder to install CPM
+# -> see https://github.com/cpm-cmake/CPM.cmake#adding-cpm
+include(cmake/CPM.cmake)
+
+CPMAddPackage("gl:JeyRunner/can-sot-protocol")
+
+# add your sources
+# ...
+add_executable(canSot-client main.cpp)
+# folder for the generated protocol header file
+target_include_directories(canSot-client  PRIVATE protocol_generated) 
+target_link_libraries(canSot-client  PRIVATE CanSotProtocol-baselib)
+```
+You also need to generate a header file for you protocol form your defined `MYPROTCOL.spec.ymal` file, to do this see [cliTool/README.md](cliTool%2FREADME.md).
+This header file will be included form your source code (as e.g. in [example/client-linux](example%2Fclient-linux/src)).
