@@ -20,7 +20,7 @@ int main(int argc, const char **argv) {
 
   if (cliArgs.genProtocolSpecCommand.doCommand) {
     GenDefFile genDefFile(cliArgs.genProtocolSpecCommand);
-    genDefFile.genDefFile();
+    genDefFile.genDefFile(argList);
   }
   else if (cliArgs.genProtocolCodeCommand.doCommand) {
       GenCode genCode(cliArgs.genProtocolCodeCommand);

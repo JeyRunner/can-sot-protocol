@@ -180,7 +180,7 @@ class GenCode{
         string t;
         for (int i=0; i<valueNodeIds.size(); i++) {
             auto [path, id] = *std::find_if(valueNodeIds.begin(), valueNodeIds.end(), [&](auto &el){return el.second == to_string(i);});
-            t += "\t\t" + insertIntoTemplate(genCodeTemplate_IdTableEntry_noComma, {{"NODE_PATH", path}}) + ",\n";
+            t += "\t\t" + insertIntoTemplate(genCodeTemplate_IdTableEntry_noComma, {{"NODE_PATH", "objectTree." + path}}) + ",\n";
         }
         return t;
     }
@@ -188,7 +188,7 @@ class GenCode{
     string genConstructorSetup() {
         string t;
         for (auto [path, id] : valueNodeIds) {
-            t += "\t\t" + insertIntoTemplate(genCodeTemplate_ConstructorSetupEntry, {{"NODE_PATH", "objectTree." + path}}) + ",\n";
+            t += "\t\t" + insertIntoTemplate(genCodeTemplate_ConstructorSetupEntry, {{"NODE_PATH", "objectTree." + path}}) + ";\n";
         }
         return t;
     }

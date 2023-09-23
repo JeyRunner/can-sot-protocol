@@ -47,6 +47,7 @@ There is a python tool that generates C++ code for accessing the object tree fro
 The implementation is independent of the used platform. To support a platform a corresponding driver has to be implemented in `src/drivers`.
 
 ### General API
+See examples in the [example](example) folder. 
 For the client:
 ```c++
 // ... init of canSot ...

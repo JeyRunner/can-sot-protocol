@@ -59,7 +59,7 @@ struct ValueNode {
             }
         }
         if (access == "rw") {
-            readWritable = "ReadWritable";
+            readWritable = "ReadWriteable";
         }
         if (readWritable.empty()) {
             return nullopt;

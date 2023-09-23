@@ -1,7 +1,7 @@
 #include <lyra/lyra.hpp>
 #include <communication/SOTClient.h>
 #include <thread>
-#include "protocol_generated/SOTProtocol.hpp"
+#include "protocol_generated/SOTProtocol.hpp"  // this file should be generated via the canSotCli tool
 #include <linux_socketCan/SocketCanInterface.hpp>
 
 using namespace lyra;

@@ -19,24 +19,6 @@ class CliArgs {
       cli.add_argument(help(showHelp));
       genProtocolSpecCommand.addToCli(cli);
       genProtocolCodeCommand.addToCli(cli);
-      string  s;
-      bool b;
-      cli.add_argument(
-              lyra::command("test", [this](const lyra::group & g) { cout << "did test" << endl; })
-                      .help("Generate a code (c++ header file) from a protocol def file.")
-                      .add_argument(lyra::help(showHelp))
-                      .add_argument(
-                              lyra::opt(s, "filess") // arg
-                                      .name("-fa")
-                                      .name("--def-fisdfle")
-                                      .required()
-                                      .help("Thdfe input protocol def file name."))
-                      .add_argument(
-                              lyra::opt(b) // arg
-                                      .name("-b")
-                                      .name("--bbbb")
-                                      .help("Thdfe input protocol def file name.")))
-                                      ;
     }
 
 
@@ -64,7 +46,7 @@ class CliArgs {
         cli.add_argument(
             lyra::command("genProtocolSpec", [this](const lyra::group & g) { this->doCmd(g); })
                 .help("Generate a protocol definition file from a protocol spec file.")
-                //.add_argument(lyra::help(showHelp))
+                .add_argument(lyra::help(showHelp))
                 .add_argument(
                     lyra::opt(inputSpecFileName, "file") // arg
                         .name("-f")
