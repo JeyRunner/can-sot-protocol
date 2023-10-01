@@ -48,6 +48,7 @@ int main(int argc, const char **argv) {
 
 
   // main communication loop
+  int i = 0;
   while (true) {
     auto timeStart = std::chrono::system_clock::now();
 
@@ -86,6 +87,18 @@ int main(int argc, const char **argv) {
       cout << "got debug.clientProcessPackagesDurationMs = " << sotClient.protocol.objectTree.debug.clientProcessPackagesDurationMs.read() << endl;
     }
 
+    // check remote call return
+    auto& testFunc = sotClient.protocol.remoteCalls.caller.testFunc;
+    if (testFunc.remoteCallReturned.checkAndReset()) {
+      cout << "testFunc returned: " << (testFunc.callReturnData.isError ? "[Error] " + to_string(testFunc.callReturnData.returnError) : "[Ok]") << endl;
+      if (!testFunc.callReturnData.isError) {
+        cout << " -- return data:  data3=" << testFunc.callReturnData.returnData.data3 << endl;
+      }
+    }
+    // send call
+    testFunc.sendCall({(float)i, 1});
+
+
     // check for errors
     if (sotClient.onCommunicationErrorRxOverflow.checkAndReset()) {
       cerr << "!!!!!! got communication error from client:  RxOverflow !!!!!!!" << endl;
@@ -113,5 +126,10 @@ int main(int argc, const char **argv) {
     int waitUs = (unsigned int) (loopDelayMs * 1000.0);
     this_thread::sleep_for(std::chrono::microseconds(waitUs));
     //cout << waitUs << endl;
+
+    i++;
+    if (i>1000) {
+        i = 0;
+    }
   }
 }

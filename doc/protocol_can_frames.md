@@ -11,9 +11,9 @@ The `SOT Message ID` determines the type of the message/package.
 
 CAN Package Direction:
 
-- 🖥️ ➡️ 🎚️️ &ensp; server sends to client
-- 🎚️ ➡️ 🖥 &ensp; clients sends to server
-- 🖥️ 🔄 🎚️️ &ensp; both client of server can send package to the other part
+- 🖥️ ➡️ 🎚️️ &ensp; master/server sends to client
+- 🎚️ ➡️ 🖥 &ensp; clients sends to master/server
+- 🖥️ 🔄 🎚️️ &ensp; both client of master/server can send package to the other part
 
 ## General Communication Flow
 This is an example for a typical communication flow. <br/>
@@ -97,13 +97,13 @@ Acknowledge is sent after Write Node Value Request was received (Note, that this
 |------------------------|----------------|
 | 0b00'0101              | Object Node ID |
 
-#### Write Node Request Value Response  &ensp; 🖥️ 🔄 🎚️️
+#### ~~Write Node Request Value Response  &ensp; 🖥️ 🔄 🎚️️~~
 
-When a node value was written (via Write Node Value Request) that is declared as `is_tmp_request_value: true`, this response message is send back by node that received the write request.
+~~When a node value was written (via Write Node Value Request) that is declared as `is_tmp_request_value: true`, this response message is send back by node that received the write request.~~
 
-| SOT Message ID (5 bit) | Data 1 byte    | Data 1 byte                                                                |
+| ~~SOT Message ID (5 bit)~~ | Data 1 byte    | Data 1 byte                                                                |
 |------------------------|----------------|----------------------------------------------------------------------------|
-| 0b00'0110              | Object Node ID | `0` if write was accepted by receiver.<br/> `1` if write was not accepted. |
+| ~~0b00'0110~~             | Object Node ID | `0` if write was accepted by receiver.<br/> `1` if write was not accepted. |
 
 ### Read
 
@@ -128,3 +128,21 @@ Response is sent after Write Node Value Request was received.
 | SOT Message ID (5 bit)        | Data 0-8 bytes                                |
 |-------------------------------|-----------------------------------------------|
 | Variable SP ID (value: 16-32) | Object Node Value (size depends on data type) |
+
+
+
+## Remote Calls
+
+#### Remote Call Request  &ensp; 🖥️ ➡️ 🎚️️
+
+| SOT Message ID (5 bit) | Data 1 byte                       | Data 0-7 bytes          |
+|------------------------|-----------------------------------|-------------------------|
+| 0b00'1100              | Remote call ID (0-6bit) (max 126) | Argument data (chained) |
+
+
+#### Remote Call Return  &ensp; 🎚️ ➡️ 🖥
+The `Remote Call` will allways lead to `Remote Call Return` back to the caller.
+
+| SOT Message ID (5 bit) | Data 1 byte                                                     | Data 0-7 bytes                              |
+|------------------------|-----------------------------------------------------------------|---------------------------------------------|
+| 0b00'1101              | Remote call ID (0-6bit), <br/>return ok (7.bit) (ok when 7.bit == 1) | Return data (chained), or 1 byte error code |

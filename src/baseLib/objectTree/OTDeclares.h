@@ -2,6 +2,7 @@
 
 #include <cinttypes>
 #include "OTNode.h"
+#include "remoteCalls/RemoteCalls.h"
 
 /*
 struct OTNodeIDsTableEntry {
@@ -19,4 +20,14 @@ using OTNodeIDsTable = ValueNodeAbstract*[size]; //OTNodeIDsTableEntry[size];
 template<class T>
 ValueNodeAbstract *valueNodeAsAbstract(T &valueNode) {
   return (ValueNodeAbstract*) &valueNode;
+}
+
+template<class T>
+inline RemoteCallCallerAbstract *valueRemoteCallCallerAsAbstract(T &remoteCall) {
+  return (RemoteCallCallerAbstract*) &remoteCall;
+}
+
+template<class T>
+inline RemoteCallCallableAbstract *valueRemoteCallCallableAsAbstract(T &remoteCall) {
+  return (RemoteCallCallableAbstract*) &remoteCall;
 }

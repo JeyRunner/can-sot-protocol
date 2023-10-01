@@ -6,7 +6,7 @@
 #include "communication/can/Can.h"
 #include "util/EventFlag.h"
 
-template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE>
+template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE, uint8_t RCCALLER_TABLE_SIZE, uint8_t RCCALLABLE_TABLE_SIZE>
 struct ProtocolDef;
 
 
@@ -161,8 +161,9 @@ class ValueNodeWritable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATIO
     ValueNodeWritable(): ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS>(NODE_ID) {
     };
 
-    void write(TYPE value) {
+    ValueNodeWritable& write(TYPE value) {
       this->value = value;
+      return *this;
     }
 };
 
@@ -184,8 +185,9 @@ class ValueNodeReadWriteable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNI
     ValueNodeReadWriteable(): ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS>(NODE_ID) {
     };
 
-    void write(TYPE value) {
+    ValueNodeReadWriteable& write(TYPE value) {
       this->value = value;
+      return *this;
     }
 
     TYPE read() {
@@ -200,8 +202,9 @@ class ValueNodeWritableEnum: public ValueNodeTypeAbstractWithProt<TYPE_UINT8, CO
 public:
     ValueNodeWritableEnum(): ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>(NODE_ID) {
     };
-    void write(TYPE value) {
+    ValueNodeWritableEnum write(TYPE value) {
         this->value = value;
+        return *this;
     }
 };
 
@@ -220,8 +223,9 @@ public:
     ValueNodeReadWriteableEnum(): ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>(NODE_ID) {
     };
 
-    void write(TYPE value) {
+    ValueNodeReadWriteableEnum write(TYPE value) {
         this->value = value;
+        return *this;
     }
 
     TYPE read() {

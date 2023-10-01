@@ -9,6 +9,9 @@ global_defs:
         DISABLE: 0
         ENABLE: 1
         START_CONFIGURATION_PROCESS: 2
+    - START_MOTOR_TESTING_ERROR:
+        MOTOR_NOT_TURNING: 0
+        ENCODER_ERROR: 1
 
 
 object_tree:
@@ -21,6 +24,7 @@ object_tree:
                             #                     'only_rtp' when this value can only be written or read by a stream packages
   - motor1:
       - name: status
+        doc: """The current status of the motor"""
         type: MOTOR_STATUS
         access: r
         default: DISABLED
@@ -105,3 +109,25 @@ stream_packages:
       - "motor1.temperature":
           only_when_changed:
             change_delta: 5  # this values just counts as changed when it's value changes at least 5 from the last send value
+
+
+
+# remote calls are similar to stream_packages in the sense that multiple values are transferred at once.
+# but remote calls do not change values in the object tree, but just transfer temporary values.
+# The receiver side can check if a remote call has been made and retrieve the passed arguments.
+# Later the receiver can return values on success, or return an error code (defined as an enum).
+# The caller can then react to the returned values or error.
+remote_calls:
+  - name: StartMotorTesting
+    direction: master_to_client    # call direction of the remote call (Currently just calling from the master to the client is supported.)
+    args:  # list of argument values (optional)
+      - name: throttle
+        type: int16
+    return_values_ok: # list of return values (optional)
+      - name: motorAlignmentOffset
+        type: float32
+    return_value_error: START_MOTOR_TESTING_ERROR  # error return type (has to be an enum) (optional)
+
+    # minimal remote call (empty args list, empty return values list, no error code)
+  - name: DoTheThing
+    direction: master_to_client

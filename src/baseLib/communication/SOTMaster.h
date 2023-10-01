@@ -42,6 +42,10 @@ struct ConnectedClient {
         sotMaster->sendReadValueReq(vNode, deviceId);
     }
 
+    inline void sendRemoteCallRequest(RemoteCallCallerAbstract &call, RemoteCallDataWritable &args) {
+        sotMaster->sendRemoteCallRequest(call, args, deviceId);
+    }
+
     /**
      * Return true if currently connected to client.
      */
@@ -68,7 +72,11 @@ template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1
 class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSize;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeId;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForRemoteCall;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeValue;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForRemoteCallReturn;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::getRemoteCallReturnOkFromPackage;
+    using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::getRemoteCallIdFromPackage;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationResponse;
     //using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationRequest;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendDisconnectCommunicationRequest;
@@ -162,6 +170,26 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
           break;
         }
 
+        case REMOTE_CALL_RETURN: {
+          RETURN_IF_FALSE(checkPackageDataSizeForRemoteCall(frame));
+          uint8_t callId = getRemoteCallIdFromPackage(frame);
+          auto call = getRemoteCallCallerById(callId, devIdAndType);
+          RESULT_WHEN_ERR_RETURN(call);
+          bool returnedOk = getRemoteCallReturnOkFromPackage(frame);
+          if (returnedOk) {
+            // check received frame data size depending on data type
+            RETURN_IF_FALSE(checkPackageDataSizeForRemoteCallReturn(frame, call));
+            call._->__returnData->_readFromData(&frame.data[1]);
+          }
+          else {
+            RETURN_IF_FALSE(checkPackageDataSizeForRemoteCall(frame, 2)); //  second byte for error code
+            *(call._->__returnError) = frame.data[1];
+          }
+          *(call._->__returnIsError) = !returnedOk;
+          call._->remoteCallReturned._triggerEvent();
+          break;
+        }
+
 
         default: {
           if ((uint8_t)devIdAndType.messageType >= SOT_MESSAGE_ID_FIRST_SP_ID) {
@@ -184,11 +212,22 @@ private:
     Result<ValueNodeAbstract*> getValueNodeById(uint8_t nodeId, DeviceIdAndSOTMessageType &devIdAndType) {
       auto &client = getClient(devIdAndType);
       if (nodeId > client.protocol.otTableSize) {
-        logWarn("Accessed NodeId %d does not exist", nodeId);
+        logWarn("Accessed NodeId with id %d does not exist", nodeId);
         return Result<ValueNodeAbstract*>::Error();
       }
       else {
         return Result<ValueNodeAbstract*>::Ok(client.protocol.otNodeIDsTable[nodeId]);
+      }
+    }
+
+    Result<RemoteCallCallerAbstract*> getRemoteCallCallerById(uint8_t callId, DeviceIdAndSOTMessageType &devIdAndType) {
+      auto &client = getClient(devIdAndType);
+      if (callId > client.protocol.rcCallerTableSize) {
+        logWarn("Accessed RemoteCall with id %d does not exist", callId);
+        return Result<RemoteCallCallerAbstract*>::Error();
+      }
+      else {
+        return Result<RemoteCallCallerAbstract*>::Ok(client.protocol.rcCallerTable[callId]);
       }
     }
 

@@ -53,6 +53,18 @@ enum SOT_MESSAGE_TYPE
      * data = 1-8 bytes
      */
     READ_NODE_VALUE_RESPONSE = 0b00'1001,
+
+    /**
+     * Call remote call on another device.
+     * data = 1-8 bytes
+     */
+    REMOTE_CALL_REQUEST = 0b00'1100,
+
+    /**
+     * Return data from a remote call to the caller device.
+     * data = 1-8 bytes
+     */
+    REMOTE_CALL_RETURN = 0b00'1101,
 };
 
 

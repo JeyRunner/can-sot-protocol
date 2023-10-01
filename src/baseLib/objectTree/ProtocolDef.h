@@ -2,6 +2,7 @@
 
 #include "objectTree/OTNodeValueTypes.h"
 #include "objectTree/OTDeclares.h"
+#include "remoteCalls/RemoteCalls.h"
 
 template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS>
 class SOTCanCommunication;
@@ -23,9 +24,11 @@ concept ProtocolDefType = requires(T) {
 /**
  * Generated protocols will extend from this class,
  */
-template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE>
+template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE, uint8_t RCCALLER_TABLE_SIZE, uint8_t RCCALLABLE_TABLE_SIZE>
 struct ProtocolDef {
     uint8_t otTableSize = OT_TABLE_SIZE;
+    uint8_t rcCallerTableSize = RCCALLER_TABLE_SIZE;
+    uint8_t rcCallableTableSize = RCCALLABLE_TABLE_SIZE;
 
     /// the index is the node id belonging to the referenced node value
     OTNodeIDsTable<OT_TABLE_SIZE>  otNodeIDsTable = {};
@@ -36,6 +39,14 @@ struct ProtocolDef {
      * These are generally read only.
      */
     ValueNodeAbstract* metaNodeValuesToSendOnInit[INIT_NODES_SIZE] = {};
+
+    /// Remote calls that can be called from this device
+    /// the index is the call id belonging to the referenced remote call
+    RemoteCallCallerAbstract *rcCallerTable[RCCALLER_TABLE_SIZE] = {};
+
+    /// Remote calls that are callable on this device. The caller will be another device.
+    /// the index is the call id belonging to the referenced remote call
+    RemoteCallCallerAbstract *rcCallableTable[RCCALLABLE_TABLE_SIZE] = {};
 
 
     COMMUNICATION_CLASS &sotCanCommunication;
@@ -74,7 +85,7 @@ struct ProtocolDef {
 
 /// just used for testing
 template<typename COMMUNICATION_CLASS>
-struct _DummpProtocl: public ProtocolDef<COMMUNICATION_CLASS, 0, 0>
+struct _DummpProtocl: public ProtocolDef<COMMUNICATION_CLASS, 0, 0, 0, 0>
 {};
 
 

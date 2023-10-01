@@ -15,7 +15,7 @@ See [cliTool/README.md](cliTool%2FREADME.md) for how to use spec.yaml files for 
 
 Clients offer an object tree, where each tree node represents a value that can be __read or written from a master__.
 Tree nodes have a datatype (which can be at max 8 bytes long).
-Below you can see an example of a simple object tree:
+Below you can see an example of a simple object tree structure:
 
 ```yaml
 - settings:
@@ -39,6 +39,16 @@ Specific packages, that will directly be mapped to can frames, can be specified.
 These packages are ment to for directly transfer multiple node values at real time without protocol overhead (like PDOs in CANopen).
 Again the total size is limited by the maximum CAN frame data size (8bytes).
 For details see [protocol_can_frames.md](doc/protocol_can_frames.md).
+
+### Remote Calls
+Remote calls are similar to stream packages in the sense that multiple values are transferred at once.
+But remote calls do not change values in the object tree, but just transfer temporary values.
+The receiver side can check if a remote call has been made and retrieve the passed arguments.
+Later the receiver can return values on success, or return an error code (defined as an enum).
+The caller can then react to the returned values or error.
+Currently just calling from the master to the client is supported.
+The total data size of the arguments and return values is limited to 7 bytes.
+
 
 ## Implementation
 
@@ -98,8 +108,8 @@ while (true) {
     ObjectTree ot = canSot.objectTree();
     ot.some_node.some_valueY.write(32f); // just set value (will not send anything)
 
-    // e.g. react to incoming real time packages
-    if (canSot.RPTsIncomming.SetValue4.received()) {
+    // e.g. react to incoming stream packages
+    if (canSot.SPsIncomming.SetValue4.received()) {
     // ...
     }
     // reset all received flags of incoming SPs
@@ -158,7 +168,7 @@ Adapt you CMakeLists.txt file as follows:
 # -> see https://github.com/cpm-cmake/CPM.cmake#adding-cpm
 include(cmake/CPM.cmake)
 
-CPMAddPackage("gl:JeyRunner/can-sot-protocol")
+CPMAddPackage("gl:JeyRunner/can-sot-protocol#<<COMMIT_HASH>>")
 
 # add your sources
 # ...

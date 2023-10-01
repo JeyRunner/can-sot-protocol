@@ -56,12 +56,36 @@ class SOTCanCommunication {
     }
 
     /**
+     * check received frame data size is >= 1, so that it can hold the caller id in the first byte
+     * @return true if ok
+     */
+    static bool checkPackageDataSizeForRemoteCall(const CanFrame &frame, uint8_t requiredSize=1) {
+      if (frame.dataLength < requiredSize) {
+        logError("received Can Frame data size %d bytes is smaller %d byte (first byte required for call id)", frame.dataLength, requiredSize);
+        return false;
+      }
+      return true;
+    }
+
+    /**
      * check received frame data size depending on data type of the node
      * @return true if ok
      */
     static bool checkPackageDataSizeForNodeValue(const CanFrame &frame, const Result<ValueNodeAbstract*> &node) {
       if (frame.dataLength < node._->getRequiredDataSizeInBytes()+1) {
         logError("received Can Frame data size %d bytes is smaller then expected %d bytes", frame.dataLength, node._->getRequiredDataSizeInBytes()+1);
+        return false;
+      }
+      return true;
+    }
+
+    /**
+     * check received frame data size for a remote call
+     * @return true if ok
+     */
+    static bool checkPackageDataSizeForRemoteCallReturn(const CanFrame &frame, const Result<RemoteCallCallerAbstract*> &call) {
+      if (frame.dataLength < call._->__returnData->getRequiredDataSizeBytes()+1) {
+        logError("received Can Frame data size %d bytes is smaller then expected %d bytes", frame.dataLength, call._->__returnData->getRequiredDataSizeBytes()+1);
         return false;
       }
       return true;
@@ -120,6 +144,30 @@ class SOTCanCommunication {
     }
 
 
+    void sendRemoteCallRequest(RemoteCallCallerAbstract &call, RemoteCallDataWritable &args, uint8_t targetDeviceId) {
+        uint8_t dataSize = 1 + args.getRequiredDataSizeBytes(); // first byte for nodeId
+        uint8_t data[dataSize];
+        data[0] = remoteCallPackIdAndReturn(call.id, false); // returnOk bit unused in emoteCallRequest
+        args._writeToData(&data[1]);
+        sendMessage(SOT_MESSAGE_TYPE::REMOTE_CALL_REQUEST, targetDeviceId, data, dataSize);
+    }
+
+    void sendRemoteCallResponseOk(RemoteCallCallableAbstract &call, RemoteCallDataWritable &returnData, uint8_t targetDeviceId) {
+        uint8_t dataSize = 1 + returnData.getRequiredDataSizeBytes(); // first byte for nodeId
+        uint8_t data[dataSize];
+        data[0] = remoteCallPackIdAndReturn(call.id, true);
+        returnData._writeToData(&data[1]);
+        sendMessage(SOT_MESSAGE_TYPE::REMOTE_CALL_RETURN, targetDeviceId, data, dataSize);
+    }
+
+    void sendRemoteCallResponseError(RemoteCallCallableAbstract &call, uint8_t errorCode, uint8_t targetDeviceId) {
+        uint8_t dataSize = 1 + 1; // first byte for nodeId
+        uint8_t data[dataSize];
+        data[0] = remoteCallPackIdAndReturn(call.id, false);
+        data[1] = errorCode;
+        sendMessage(SOT_MESSAGE_TYPE::REMOTE_CALL_RETURN, targetDeviceId, data, dataSize);
+    }
+
 
     void sendMessage(SOT_MESSAGE_TYPE type, uint8_t targetDeviceId, uint8_t *data, uint8_t dataSize, bool frameIsOverflowError = false) {
       CanFrame frame;
@@ -145,6 +193,18 @@ class SOTCanCommunication {
 
     static NodeId nodeIdFromPackage(CanFrame frame) {
       return frame.data[0];
+    }
+
+    static inline uint8_t getRemoteCallIdFromPackage(CanFrame frame) {
+      return (uint8_t) (frame.data[0] & 0b1111'1110) >> 1;
+    }
+
+    static inline bool getRemoteCallReturnOkFromPackage(CanFrame frame) {
+      return (bool) (frame.data[0] & 0b000'0001);
+    }
+
+    static inline uint8_t remoteCallPackIdAndReturn(uint8_t remoteCallId, bool returnOk) {
+        return (uint8_t) ((remoteCallId << 1) & 0b1111'1110) | (returnOk & 0b0000'0001);
     }
 
     /**

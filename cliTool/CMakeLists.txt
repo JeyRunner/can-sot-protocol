@@ -1,7 +1,11 @@
 
 ## Dependencies ###################
 CPMAddPackage("gh:bfgroup/Lyra#1.5.1")
-CPMAddPackage("gh:ArthurSonzogni/FTXUI@3.0.0")
+CPMAddPackage(
+        GITHUB_REPOSITORY "ArthurSonzogni/FTXUI"
+        VERSION 3.0.0
+        OPTIONS "FTXUI_BUILD_EXAMPLES OFF"
+        )
 #CPMAddPackage("gh:biojppm/rapidyaml@0.5.0")
 CPMAddPackage(
         GITHUB_REPOSITORY "biojppm/rapidyaml"

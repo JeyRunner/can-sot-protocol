@@ -74,8 +74,19 @@ int runApp()
 
     // change some value
     sotClient.getProtocol().objectTree.settings.subSettings.value3.write(
-            sotClient.getProtocol().objectTree.settings.subSettings.value3.read()+0.1
+            sotClient.getProtocol().objectTree.settings.subSettings.value3.read() + 0.1
     );
+
+
+    // react to remote call
+    if (sotClient.getProtocol().remoteCalls.callable.testFunc.remoteCallCalled.checkAndReset()) {
+        if (sotClient.getProtocol().remoteCalls.callable.testFunc.argumentsData.arg1 > 100) {
+            sotClient.getProtocol().remoteCalls.callable.testFunc.sendReturnOk({1,2, (uint16_t) (sotClient.getProtocol().remoteCalls.callable.testFunc.argumentsData.arg1 * 2)});
+        }
+        else {
+            sotClient.getProtocol().remoteCalls.callable.testFunc.sendReturnError(TestProtocol<SOTClient<TestProtocol, Stm32HalCanInterface>>::B);
+        }
+    }
 
     // testing: send a lot of packages to test tx overflow
     if (sotClient.isConnected()) {
@@ -92,7 +103,7 @@ int runApp()
     // wait
     //HAL_GPIO_TogglePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin);
     //sendTestFrame(canInterface);
-    HAL_Delay(100);
+    HAL_Delay(1);
   }
 
   return 0;
