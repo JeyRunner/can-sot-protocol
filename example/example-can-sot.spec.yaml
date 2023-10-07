@@ -5,6 +5,9 @@ global_defs:
         ERROR: 1
         DISABLED: 2
         CONFIGURATION_PROCESS: 3
+    - MOTOR_DIRECTION:
+        NORMAL: 0
+        INVERSE: 1
     - MOTOR_CHANGE_STATE:
         DISABLE: 0
         ENABLE: 1
@@ -24,7 +27,8 @@ object_tree:
                             #                     'only_rtp' when this value can only be written or read by a stream packages
   - motor1:
       - name: status
-        doc: """The current status of the motor"""
+        doc: |
+          The current status of the motor
         type: MOTOR_STATUS
         access: r
         default: DISABLED
@@ -122,10 +126,14 @@ remote_calls:
     direction: master_to_client    # call direction of the remote call (Currently just calling from the master to the client is supported.)
     args:  # list of argument values (optional)
       - name: throttle
-        type: int16
+        type: uint16
+      - name: vel
+        type: float32
     return_values_ok: # list of return values (optional)
       - name: motorAlignmentOffset
         type: float32
+      - name: motorDirection
+        type: MOTOR_DIRECTION
     return_value_error: START_MOTOR_TESTING_ERROR  # error return type (has to be an enum) (optional)
 
     # minimal remote call (empty args list, empty return values list, no error code)

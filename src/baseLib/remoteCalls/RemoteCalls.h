@@ -35,6 +35,29 @@ struct RemoteCallDataReadable {
 
 
 
+/// no data
+struct VoidRemoteCallDataWritable: RemoteCallDataWritable {
+  const uint8_t getRequiredDataSizeBytes() override {
+    return 0;
+  }
+
+  void _writeToData(uint8_t *data) override {}
+};
+
+/// no data
+struct VoidRemoteCallDataReadable: RemoteCallDataReadable {
+  const uint8_t getRequiredDataSizeBytes() override {
+    return 0;
+  }
+
+  void _readFromData(const uint8_t *data) override {}
+};
+
+/// used when there is not error type
+enum VOID_ENUM {};
+
+
+
 
 template<class RETURN_DATA, class ERROR_ENUM>
 struct RemoteCallReturn {
@@ -127,3 +150,6 @@ public:
         sotCommunication->sendRemoteCallResponseError(*this, (uint8_t) errorCode);
     }
 };
+
+
+

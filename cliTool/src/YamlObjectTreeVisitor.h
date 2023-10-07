@@ -6,6 +6,23 @@ using namespace std;
 
 
 
+static optional<string> getTypeAsCppType(const string& type, bool typePrefix=true) {
+  string prefix = typePrefix ? "TYPE_" : "";
+  if (type == "uint8") {
+    return prefix + "UINT8";
+  }
+  else if (type == "uint16") {
+    return prefix + "UINT16";
+  }
+  else if (type == "float32") {
+    return prefix + "F32";
+  }
+  else {
+    return nullopt;
+  }
+}
+
+
 struct ValueNode {
     string name;
     string type;
@@ -25,18 +42,7 @@ struct ValueNode {
     }
 
     optional<string> getTypeAsCppType() {
-        if (type == "uint8") {
-            return "TYPE_UINT8";
-        }
-        else if (type == "uint16") {
-            return "TYPE_UINT16";
-        }
-        else if (type == "float32") {
-            return "TYPE_F32";
-        }
-        else {
-            return nullopt;
-        }
+        return ::getTypeAsCppType(type);
     }
 
 
@@ -67,6 +73,7 @@ struct ValueNode {
         return readWritable;
     }
 };
+
 
 
 class YamlObjectTreeVisitor {

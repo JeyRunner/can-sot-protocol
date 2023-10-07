@@ -32,6 +32,7 @@ class CliArgs {
         std::cout << endl << cli << std::endl;
         exit(0);
       }
+      return true;
     }
 
 
@@ -83,7 +84,7 @@ class CliArgs {
         bool doCommand = false;
         bool showHelp = false;
         string inputDefFileName;
-        string outputHeaderFileName;
+        string outputHeaderFilesDir;
         bool forMaster = false;
 
     private:
@@ -104,11 +105,11 @@ class CliArgs {
                                             .required()
                                             .help("The input protocol def file name."))
                             .add_argument(
-                                    lyra::opt(outputHeaderFileName, "file")
+                                    lyra::opt(outputHeaderFilesDir, "dir")
                                             .name("-o")
-                                            .name("--output-header-file")
+                                            .name("--output-header-file-dir")
                                             .required()
-                                            .help("The output c++ header file name."))
+                                            .help("The output c++ src dir where the generated header files will be saved."))
                             .add_argument(
                                     lyra::opt(args_forMaster)
                                             .name("-m")
