@@ -114,6 +114,10 @@ class GenDefFile {
         set<string> definedCalls;
 
         void genTable(YAML::Node remoteCallsNode) {
+          if (remoteCallsNode.size() == 0) {
+            printEl(hbox({">> "_T | bold, text("No remote calls defined.")}));
+            return;
+          }
           if (!remoteCallsNode.IsSequence()) {
             printEl(hbox({">> Error: "_T | bold, text("remote_calls has to be a list, but its not.")}) | color(Color::Red));
             throw runtime_error("GenRemoteCallsIds");

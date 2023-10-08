@@ -201,6 +201,10 @@ class GenCode{
 
 
     void remoteCallSortCallerCallable(YAML::Node remoteCalls) {
+      if (remoteCalls.size() == 0) {
+        printEl(hbox({">> "_T | bold, text("No remote calls defined.")}));
+        return;
+      }
       if (!remoteCalls.IsSequence()) {
         errorAndExit("remote_calls has to be a list, but its not.", "remote_calls");
         return;
@@ -338,10 +342,10 @@ class GenCode{
       for (int i=0; i<remoteCallsIds.size(); i++) {
         auto [name, id] = *std::find_if(remoteCallsIds.begin(), remoteCallsIds.end(), [&](auto &el){return el.second == to_string(i);});
         if (isCaller && std::find_if(remoteCallsCaller.begin(), remoteCallsCaller.end(), [&](auto &el){return el.name == name;}) != remoteCallsCaller.end()) {
-          t += "\t\t" + insertIntoTemplate(genCodeTemplate_RemoteCallsTableEntry_noComma, {{"PATH", "remoteCalls." + name}}) + ",\n";
+          t += "\t\t" + insertIntoTemplate(genCodeTemplate_RemoteCallsTableEntry_Caller_noComma, {{"PATH", "remoteCalls." + name}}) + ",\n";
         }
         else if ((!isCaller) && std::find_if(remoteCallsCallable.begin(), remoteCallsCallable.end(), [&](auto &el){return el.name == name;}) != remoteCallsCallable.end()) {
-          t += "\t\t" + insertIntoTemplate(genCodeTemplate_RemoteCallsTableEntry_noComma, {{"PATH", "remoteCalls." + name}}) + ",\n";
+          t += "\t\t" + insertIntoTemplate(genCodeTemplate_RemoteCallsTableEntry_Callable_noComma, {{"PATH", "remoteCalls." + name}}) + ",\n";
         }
         else {
           continue;

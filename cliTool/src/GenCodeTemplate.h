@@ -89,7 +89,9 @@ static std::string genCodeTemplate_ValueNode = R"(ValueNode@@READ_WRITABLE@@<@@T
 
 
 static std::string genCodeTemplate_IdTableEntry_noComma = R"(valueNodeAsAbstract(@@NODE_PATH@@))";
-static std::string genCodeTemplate_RemoteCallsTableEntry_noComma = R"(valueRemoteCallCallerAsAbstract(@@PATH@@))";
+
+static std::string genCodeTemplate_RemoteCallsTableEntry_Caller_noComma = R"(valueRemoteCallCallerAsAbstract(@@PATH@@))";
+static std::string genCodeTemplate_RemoteCallsTableEntry_Callable_noComma = R"(valueRemoteCallCallableAsAbstract(@@PATH@@))";
 static std::string genCodeTemplate_ConstructorSetupEntry = R"(@@NODE_PATH@@.__setProtocolRef(sotCanCommunication))";
 
 
