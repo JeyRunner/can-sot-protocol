@@ -236,11 +236,11 @@ class GenCode{
       string t;
       for (auto call : remoteCallsCaller) {
         string id = getIdForRemoteCalls(call.name);
-        t += "\t\tRemoteCallCaller<"+ id +", "+ call.typeArgsData +", "+ call.typeReturnData +", "+ getEnumOrVoidType(call.return_value_error) +", COMC> "+ call.name +"\n";
+        t += "\t\tRemoteCallCaller<"+ id +", "+ call.typeArgsData +", "+ call.typeReturnData +", "+ getEnumOrVoidType(call.return_value_error) +", COMC> "+ call.name +";\n";
       }
       for (auto call : remoteCallsCallable) {
         string id = getIdForRemoteCalls(call.name);
-        t += "\t\tRemoteCallCallable<"+ id +", "+ call.typeArgsData +", "+ call.typeReturnData +", "+ getEnumOrVoidType(call.return_value_error) +", COMC> "+ call.name +"\n";
+        t += "\t\tRemoteCallCallable<"+ id +", "+ call.typeArgsData +", "+ call.typeReturnData +", "+ getEnumOrVoidType(call.return_value_error) +", COMC> "+ call.name +";\n";
       }
       return t;
     }

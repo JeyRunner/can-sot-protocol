@@ -66,7 +66,7 @@ struct @@PROTOCOL_CLASS_NAME@@: public ProtocolDef<COMC, @@NODE_ID_TABLE_SIZE@@,
 
 
   explicit @@PROTOCOL_CLASS_NAME@@(COMC *sotCanCommunication)
-  : ProtocolDef<COMC, @@NODE_ID_TABLE_SIZE@@, @@NODES_TO_SEND_ON_INIT_TABLE_SIZE@@>(sotCanCommunication) {
+  : ProtocolDef<COMC, @@NODE_ID_TABLE_SIZE@@, @@NODES_TO_SEND_ON_INIT_TABLE_SIZE@@, @@RCCALLER_TABLE_SIZE@@, @@RCCALLABLE_TABLE_SIZE@@>(sotCanCommunication) {
     // setup all nodevalues
 @@CONSTRUCTOR_SETUP_ALL_NODE_VALUES@@
   };
