@@ -83,6 +83,11 @@ TEST_CASE("MasterClient communication: client does return from remote call [OK] 
   CHECK(masterProtocol.remoteCalls.caller.testFunc.callReturnData.returnData.data2 == 34);
   CHECK(masterProtocol.remoteCalls.caller.testFunc.callReturnData.returnData.data3 == 6541);
   CHECK(masterProtocol.remoteCalls.caller.testFunc.callReturnData.isError == false);
+  bool handleFuncCalled = false;
+  masterProtocol.remoteCalls.caller.testFunc.handleCallReturned([&](RemoteCallReturn<TestFuncReturnDataCaller, TEST_ENUM> agrs) {
+    handleFuncCalled = true;
+  });
+  CHECK(handleFuncCalled);
 }
 
 

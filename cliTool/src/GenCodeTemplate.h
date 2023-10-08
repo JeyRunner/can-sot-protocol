@@ -13,10 +13,9 @@ static std::string genCodeTemplateHeaderContent = R"(
 #include <objectTree/OTNodeValueTypeDefs.h>
 #include <objectTree/OTDeclares.h>
 #include <objectTree/ProtocolDef.h>
+#include "@@PROTOCOL_CLASS_NAME@@_Structs.hpp"
 
 namespace @@PROTOCOL_CLASS_NAME@@ {
-
-@@ENUM_DEFS@@
 
 
 /**
@@ -153,6 +152,9 @@ static std::string genCodeTemplate_StructsHeader = R"(
 #include "remoteCalls/RemoteCalls.h"
 
 namespace @@PROTOCOL_CLASS_NAME@@ {
+
+@@ENUM_DEFS@@
+
 
 @@REMOTE_CALLS_DATA_STRUCTS@@
 

@@ -3,10 +3,12 @@
 #ifdef __linux__
 #include "optional"
 #include "variant"
+#include "functional"
 using namespace std;
 #else
 #include "etl/optional.h"
 #include "etl/variant.h"
+#include "etl/function.h"
 using namespace etl;
 #endif
 
@@ -107,6 +109,25 @@ public:
     void sendCall(ARGS_DATA argumentData) {
         sotCommunication->sendRemoteCallRequest(*this, argumentData);
     }
+
+    /**
+     * Will call the given handleFunction when the remote called returned.
+     * This will also clear the remoteCallReturned flag.
+     */
+#ifdef __linux__
+    inline void handleCallReturned(function<void (RemoteCallReturn<RETURN_DATA, ERROR_ENUM> returnData)> handleFunction) {
+#else
+    inline void handleCallReturned(void (*handleFunction) (RemoteCallReturn<RETURN_DATA, ERROR_ENUM> returnData)) {
+#endif
+      // void (*handleFunction) (RemoteCallReturn<RETURN_DATA, ERROR_ENUM> returnData
+      if (remoteCallReturned.checkAndReset()) {
+        #ifdef __linux__
+        handleFunction(callReturnData);
+        #else
+        (*handleFunction)(callReturnData);
+        #endif
+      }
+    }
 };
 
 
@@ -148,6 +169,33 @@ public:
 
     void sendReturnError(ERROR_ENUM errorCode) {
         sotCommunication->sendRemoteCallResponseError(*this, (uint8_t) errorCode);
+    }
+
+
+    /**
+     * Will call the given handleFunction when the remote was called.
+     * The return value handleFunction will be send back as a response to the caller.
+     * This will also clear the remoteCallReturned flag.
+     */
+#ifdef __linux__
+    inline void handleCallCalled(function<variant<RETURN_DATA, ERROR_ENUM> (ARGS_DATA arguments)> handleFunction) {
+#else
+    inline void handleCallCalled(variant<RETURN_DATA, ERROR_ENUM> (*handleFunction) (ARGS_DATA arguments)) {
+#endif
+      // variant<RETURN_DATA, ERROR_ENUM> (*handleFunction) (ARGS_DATA arguments)
+      if (remoteCallCalled.checkAndReset()) {
+#ifdef __linux__
+        variant<RETURN_DATA, ERROR_ENUM> retValue = handleFunction(argumentsData);
+#else
+        variant<RETURN_DATA, ERROR_ENUM> retValue = (*handleFunction)(argumentsData);
+#endif
+        if (holds_alternative<RETURN_DATA>(retValue)) {
+          sendReturnOk(get<RETURN_DATA>(retValue));
+        }
+        else if (holds_alternative<ERROR_ENUM>(retValue)) {
+          sendReturnError(get<ERROR_ENUM>(retValue));
+        }
+      }
     }
 };
 

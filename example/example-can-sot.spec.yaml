@@ -139,3 +139,8 @@ remote_calls:
     # minimal remote call (empty args list, empty return values list, no error code)
   - name: DoTheThing
     direction: master_to_client
+    #return_value_error:
+    #  enum: # inline enum definition, works everywhere @todo
+    #    THE_THING_RETURN_ERROR:
+    #      THING_DOES_NOT_WORK: 0
+    #      UNKNOWN_ERROR: 1

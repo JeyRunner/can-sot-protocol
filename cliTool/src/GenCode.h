@@ -153,7 +153,6 @@ class GenCode{
           {"GENERATED_CMD", argsString},
           {"GENERATION_TARGET", genTarget},
           {"PROTOCOL_CLASS_NAME", firstCharToUpper(protocolName)},
-          {"ENUM_DEFS", enumDefsCode},
           {"OBJECT_TREE", genObjectTreeCode.code},
           {"REMOTE_CALLS", remoteCallsDefCode},
           {"NODE_ID_TABLE_SIZE", to_string(valueNodeIds.size())},
@@ -189,6 +188,7 @@ class GenCode{
               {"GENERATED_CMD", argsString},
               {"GENERATION_TARGET", genTarget},
               {"PROTOCOL_CLASS_NAME", firstCharToUpper(protocolName)},
+              {"ENUM_DEFS", enumDefsCode},
               {"REMOTE_CALLS_DATA_STRUCTS", remoteCallsDataStructsDefCode},
       });
       string outputStructsHeaderFileName = cliArgs.outputHeaderFilesDir + "/" + protocolName + "_Structs.hpp";
@@ -262,14 +262,14 @@ class GenCode{
         for (auto el : members) {
           bool isLast = i >= members.size()-1;
           bool isFist = i == 0;
-          string cppType = getTypeAsCppTypeResolveEnums(el.type);
-          string cppTypeShort = getTypeAsCppTypeResolveEnums(el.type, false);
-          if (cppType.empty()) {
+          auto [cppTypeShort, cppTypeIsEnum] = getTypeAsCppTypeResolveEnums(el.type, false);
+          string cppType = "TYPE_" + cppTypeShort;
+          if (cppTypeShort.empty()) {
             errorAndExit("invalid type used in remote_calls args or return values", "remote_calls");
           }
           membersCode += "\t" + cppType + " " + el.name + ";\n";
 
-          convertDataCode += "\t\t" + dataConvertFunc + cppTypeShort +
+          convertDataCode += "\t\t" + dataConvertFunc + (cppTypeIsEnum ? "ENUM" : cppTypeShort) +
                   "(data["+ (convertDataCodeDataSizeAcc.empty() ? "0" : convertDataCodeDataSizeAcc) +"], "
                   + el.name +");\n";
           convertDataCodeDataSizeAcc += string("") + (isFist ? "" : " + ") + "sizeof(" + cppType + ")";
@@ -302,7 +302,7 @@ class GenCode{
         // return data
         if (!call.return_values_ok.empty()) {
           call.typeReturnData = firstCharToUpper(call.name) + "ReturnDataCaller";
-          t += genCallDataStruct(call.typeReturnData, genCodeTemplate_RemoteCallDataReadable, "readFromData", call.args);
+          t += genCallDataStruct(call.typeReturnData, genCodeTemplate_RemoteCallDataReadable, "readFromData", call.return_values_ok);
         }
         else {
           call.typeReturnData = "VoidRemoteCallDataReadable";
@@ -321,7 +321,7 @@ class GenCode{
         // return data
         if (!call.return_values_ok.empty()) {
           call.typeReturnData = firstCharToUpper(call.name) + "ReturnDataCallable";
-          t += genCallDataStruct(call.typeReturnData, genCodeTemplate_RemoteCallDataWritable, "writeToData", call.args);
+          t += genCallDataStruct(call.typeReturnData, genCodeTemplate_RemoteCallDataWritable, "writeToData", call.return_values_ok);
         }
         else {
           call.typeReturnData = "VoidRemoteCallDataWritable";
@@ -407,16 +407,23 @@ class GenCode{
     }
 
 
-    string getTypeAsCppTypeResolveEnums(string typeStr, bool typePrefix=true) {
+    /**
+     *
+     * @param typeStr
+     * @param typePrefix prefix returned type name with 'TYPE_'
+     * @return first: the cpp type, second: if it is a enum Type
+     */
+    pair<string, bool> getTypeAsCppTypeResolveEnums(string typeStr, bool typePrefix=true) {
       auto type = getTypeAsCppType(typeStr, typePrefix);
       string resultType;
       if (!type) {
         resultType = getTypeAsEnum(typeStr);
+        return make_pair(resultType, true);
       }
       else {
         resultType = type.value();
+        return make_pair(resultType, false);
       }
-      return resultType;
     }
 
     string getTypeAsEnum(string typeStr) {
