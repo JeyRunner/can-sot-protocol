@@ -24,6 +24,14 @@ void sendTestFrame(Stm32HalCanInterface &canInterface) {
 }
 
 
+variant<TestFuncReturnDataCallable, TestProtocol<SOTClient<TestProtocol, Stm32HalCanInterface>>::TEST_ENUM> handleTestFunc(TestFuncArgDataCallable args) {
+  // to return values:
+  return TestFuncReturnDataCallable(1, 1, 1);
+  // to return error:
+  return TestProtocol<SOTClient<TestProtocol, Stm32HalCanInterface>>::TEST_ENUM::A;
+}
+
+
 /**
  * Gets called from cubeMxGenerated/Src/main.cpp
  * @return
@@ -87,6 +95,8 @@ int runApp()
             sotClient.getProtocol().remoteCalls.callable.testFunc.sendReturnError(TestProtocol<SOTClient<TestProtocol, Stm32HalCanInterface>>::B);
         }
     }
+    // or
+    // sotClient.getProtocol().remoteCalls.callable.testFunc.handleCallCalled(handleTestFunc);
 
     // testing: send a lot of packages to test tx overflow
     if (sotClient.isConnected()) {

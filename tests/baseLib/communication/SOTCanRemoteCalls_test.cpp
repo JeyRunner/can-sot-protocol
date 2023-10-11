@@ -44,6 +44,16 @@ TEST_CASE("MasterClient communication: master does remote call to client") {
   CHECK(client.getProtocol().remoteCalls.callable.testFunc.remoteCallCalled);
   CHECK(client.getProtocol().remoteCalls.callable.testFunc.argumentsData.arg1 == doctest::Approx(22.3));
   CHECK(client.getProtocol().remoteCalls.callable.testFunc.argumentsData.arg2 == 68);
+  bool calledHandleFuncCalled = false;
+  client.getProtocol().remoteCalls.callable.testFunc.handleCallCalled([&](auto agrs) {
+    calledHandleFuncCalled = true;
+    return TEST_ENUM::B; // return error
+  });
+  CHECK(calledHandleFuncCalled);
+
+  REQUIRE(client.framesSend.size() == 1);
+  CHECK(client.getLastSendFrameType() == REMOTE_CALL_RETURN);
+  CHECK(client.getLastSendFrame().dataLength == 1 + 1 /* second byte for error */);
 }
 
 
@@ -83,11 +93,11 @@ TEST_CASE("MasterClient communication: client does return from remote call [OK] 
   CHECK(masterProtocol.remoteCalls.caller.testFunc.callReturnData.returnData.data2 == 34);
   CHECK(masterProtocol.remoteCalls.caller.testFunc.callReturnData.returnData.data3 == 6541);
   CHECK(masterProtocol.remoteCalls.caller.testFunc.callReturnData.isError == false);
-  bool handleFuncCalled = false;
+  bool returnedHandleFuncCalled = false;
   masterProtocol.remoteCalls.caller.testFunc.handleCallReturned([&](RemoteCallReturn<TestFuncReturnDataCaller, TEST_ENUM> agrs) {
-    handleFuncCalled = true;
+    returnedHandleFuncCalled = true;
   });
-  CHECK(handleFuncCalled);
+  CHECK(returnedHandleFuncCalled);
 }
 
 

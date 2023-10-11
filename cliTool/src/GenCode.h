@@ -263,7 +263,7 @@ class GenCode{
           bool isLast = i >= members.size()-1;
           bool isFist = i == 0;
           auto [cppTypeShort, cppTypeIsEnum] = getTypeAsCppTypeResolveEnums(el.type, false);
-          string cppType = "TYPE_" + cppTypeShort;
+          string cppType = (cppTypeIsEnum ? "" : "TYPE_") + cppTypeShort;
           if (cppTypeShort.empty()) {
             errorAndExit("invalid type used in remote_calls args or return values", "remote_calls");
           }
@@ -272,7 +272,9 @@ class GenCode{
           convertDataCode += "\t\t" + dataConvertFunc + (cppTypeIsEnum ? "ENUM" : cppTypeShort) +
                   "(data["+ (convertDataCodeDataSizeAcc.empty() ? "0" : convertDataCodeDataSizeAcc) +"], "
                   + el.name +");\n";
-          convertDataCodeDataSizeAcc += string("") + (isFist ? "" : " + ") + "sizeof(" + cppType + ")";
+          convertDataCodeDataSizeAcc += string("") + (isFist ? "" : " + ") + "sizeof(" +
+                  (cppTypeIsEnum ? "uint8_t" : cppType)
+                  + ")";
 
           argsConstructorCode += cppType + " " + el.name + (isLast ? "" : ",");
           argsConstructorCodeInitMembers += el.name + "(" + el.name + ")"+ (isLast ? "" : ", ");
