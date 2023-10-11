@@ -6,7 +6,7 @@ inline void writeToDataUINT8(uint8_t &data, TYPE_UINT8 value) {
 
 template<class T>
 inline void writeToDataENUM(uint8_t &data, T value) {
-  *((uint8_t*) &data) = value;
+  *((uint8_t*) &data) = (uint8_t) value;
 }
 
 inline void writeToDataUINT16(uint8_t &data, TYPE_UINT16 value) {
@@ -25,8 +25,8 @@ inline void readFromDataUINT8(const uint8_t &data, TYPE_UINT8 &value) {
 }
 
 template<class T>
-inline void readFromDataENUM(const uint8_t &data, T value) {
-  return static_cast<T>(*((uint8_t*) &data));
+inline void readFromDataENUM(const uint8_t &data, T &value) {
+  value = static_cast<T>(*((uint8_t*) &data));
 }
 
 inline void readFromDataUINT16(const uint8_t &data, TYPE_UINT16 &value) {
