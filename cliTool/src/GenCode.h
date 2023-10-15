@@ -53,7 +53,7 @@ public:
                 readWritableStr += "Enum";
             }
             else {
-                cout << ">> Error: node '"<< fullPath <<"' has unknown type value, allowed are: uint8, uint16, float32 or a defined enum" << endl;
+                cout << ">> Error: node '"<< fullPath <<"' has unknown type value, allowed are: uint8, int8, uint16, int16, int32, float32 or a defined enum" << endl;
                 error = true;
             }
         }
@@ -435,7 +435,7 @@ class GenCode{
         resultType = typeStr;
       }
       else {
-        cout << ">> Error: type '"<< typeStr <<"' is unknown, allowed are: uint8, uint16, float32 or a defined enum" << endl;
+        cout << ">> Error: type '"<< typeStr <<"' is unknown, allowed are: uint8, int8, uint16, int16, int32, float32 or a defined enum" << endl;
         return "";
       }
       return resultType;

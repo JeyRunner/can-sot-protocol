@@ -63,7 +63,7 @@ object_tree:
 
       #!doc
       - name: temperature
-        type: float32
+        type: int32
         access: r
         doc: # optional doc
           unit: '°C'
@@ -126,7 +126,7 @@ remote_calls:
     direction: master_to_client    # call direction of the remote call (Currently just calling from the master to the client is supported.)
     args:  # list of argument values (optional)
       - name: throttle
-        type: uint16
+        type: int16
       - name: vel
         type: float32
     return_values_ok: # list of return values (optional)

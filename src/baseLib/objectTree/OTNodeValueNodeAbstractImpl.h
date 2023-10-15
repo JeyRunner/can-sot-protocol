@@ -8,8 +8,14 @@ const uint8_t ValueNodeAbstract::getRequiredDataSizeInBytes() const {
   switch (dataType) {
     case VALUE_NODE_DATA_TYPES::UINT8:
       return 1;
+    case VALUE_NODE_DATA_TYPES::INT8:
+      return 1;
     case VALUE_NODE_DATA_TYPES::UINT16:
       return 2;
+    case VALUE_NODE_DATA_TYPES::INT16:
+      return 2;
+    case VALUE_NODE_DATA_TYPES::INT32:
+      return 4;
     case VALUE_NODE_DATA_TYPES::F32:
       return 4;
     default:
@@ -26,9 +32,24 @@ void ValueNodeAbstract::writeToData(uint8_t *data) {
       writeToDataUINT8(*data, v->value);
       break;
     }
+    case VALUE_NODE_DATA_TYPES::INT8: {
+      auto *v = (ValueNodeTypeAbstract<TYPE_INT8>*)this;
+      writeToDataINT8(*data, v->value);
+      break;
+    }
     case VALUE_NODE_DATA_TYPES::UINT16: {
       auto *v = (ValueNodeTypeAbstract<TYPE_UINT16>*)this;
       writeToDataUINT16(*data, v->value);
+      break;
+    }
+    case VALUE_NODE_DATA_TYPES::INT16: {
+      auto *v = (ValueNodeTypeAbstract<TYPE_INT16>*)this;
+      writeToDataINT16(*data, v->value);
+      break;
+    }
+    case VALUE_NODE_DATA_TYPES::INT32: {
+      auto *v = (ValueNodeTypeAbstract<TYPE_INT32>*)this;
+      writeToDataINT32(*data, v->value);
       break;
     }
     case VALUE_NODE_DATA_TYPES::F32:{
@@ -48,9 +69,24 @@ void ValueNodeAbstract::readFromData(const uint8_t *data) {
       readFromDataUINT8(*data, v->value);
       break;
     }
+    case VALUE_NODE_DATA_TYPES::INT8: {
+      auto *v = (ValueNodeTypeAbstract<TYPE_INT8>*)this;
+      readFromDataINT8(*data, v->value);
+      break;
+    }
     case VALUE_NODE_DATA_TYPES::UINT16: {
       auto *v = (ValueNodeTypeAbstract<TYPE_UINT16>*)this;
       readFromDataUINT16(*data, v->value);
+      break;
+    }
+    case VALUE_NODE_DATA_TYPES::INT16: {
+      auto *v = (ValueNodeTypeAbstract<TYPE_INT16>*)this;
+      readFromDataINT16(*data, v->value);
+      break;
+    }
+    case VALUE_NODE_DATA_TYPES::INT32: {
+      auto *v = (ValueNodeTypeAbstract<TYPE_INT32>*)this;
+      readFromDataINT32(*data, v->value);
       break;
     }
     case VALUE_NODE_DATA_TYPES::F32:{

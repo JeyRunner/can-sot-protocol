@@ -11,8 +11,17 @@ static optional<string> getTypeAsCppType(const string& type, bool typePrefix=tru
   if (type == "uint8") {
     return prefix + "UINT8";
   }
+  else if (type == "int8") {
+    return prefix + "INT8";
+  }
   else if (type == "uint16") {
     return prefix + "UINT16";
+  }
+  else if (type == "int16") {
+    return prefix + "INT16";
+  }
+  else if (type == "int32") {
+    return prefix + "INT32";
   }
   else if (type == "float32") {
     return prefix + "F32";

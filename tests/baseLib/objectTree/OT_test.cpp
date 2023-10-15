@@ -79,8 +79,17 @@ TEST_CASE("test object value to binary and back") {
   SUBCASE("UInt8") {
     testObjectValueWriteRead<TYPE_UINT8>(55);
   }
+  SUBCASE("Int8") {
+    testObjectValueWriteRead<TYPE_INT8>(-55);
+  }
   SUBCASE("UInt16") {
     testObjectValueWriteRead<TYPE_UINT16>(55);
+  }
+  SUBCASE("Int16") {
+    testObjectValueWriteRead<TYPE_INT16>(-1058);
+  }
+  SUBCASE("Int32") {
+    testObjectValueWriteRead<TYPE_INT32>(-10455858);
   }
   SUBCASE("F32") {
     testObjectValueWriteRead<TYPE_F32>(112.33);
