@@ -96,7 +96,9 @@ int runApp()
         }
     }
     // or
-    // sotClient.getProtocol().remoteCalls.callable.testFunc.handleCallCalled(handleTestFunc);
+    sotClient.getProtocol().remoteCalls.callable.testFunc.handleCallCalled(
+            etl::delegate<variant<TestFuncReturnDataCallable, TestProtocol<SOTClient<TestProtocol, Stm32HalCanInterface>>::TEST_ENUM>(TestFuncArgDataCallable args)>::create<handleTestFunc>()
+    );
 
     // testing: send a lot of packages to test tx overflow
     if (sotClient.isConnected()) {

@@ -31,6 +31,7 @@ message(STATUS "baseLibSrc: ${baseLibSrc}")
 #add_library(${PROJECT_NAME}-baseLib INTERFACE ${baseLibHeaders} ${baseLibSrc})
 add_library(${PROJECT_NAME}-baseLib ${baseLibHeaders} ${baseLibSrc})
 set_target_properties(${PROJECT_NAME}-baseLib PROPERTIES CXX_STANDARD 17)
+target_compile_definitions(${PROJECT_NAME}-baseLib  PUBLIC -DETL_USING_CPP11)
 target_include_directories(${PROJECT_NAME}-baseLib PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/baseLib/>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/driver/>
