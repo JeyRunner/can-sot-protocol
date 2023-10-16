@@ -15,7 +15,7 @@ static std::string genCodeTemplateHeaderContent = R"(
 #include <objectTree/ProtocolDef.h>
 #include "@@PROTOCOL_CLASS_NAME@@_Structs.hpp"
 
-namespace @@PROTOCOL_CLASS_NAME@@ {
+namespace @@PROTOCOL_CLASS_NAME@@Namespace {
 
 
 /**
@@ -151,7 +151,7 @@ static std::string genCodeTemplate_StructsHeader = R"(
 #include "objectTree/ProtocolDef.h"
 #include "remoteCalls/RemoteCalls.h"
 
-namespace @@PROTOCOL_CLASS_NAME@@ {
+namespace @@PROTOCOL_CLASS_NAME@@Namespace {
 
 @@ENUM_DEFS@@
 

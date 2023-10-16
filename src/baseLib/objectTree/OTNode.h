@@ -203,7 +203,7 @@ public:
     ValueNodeWritableEnum(): ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>(NODE_ID) {
     };
     ValueNodeWritableEnum write(TYPE value) {
-        this->value = value;
+        this->value = (TYPE_UINT8) value;
         return *this;
     }
 };
@@ -224,7 +224,7 @@ public:
     };
 
     ValueNodeReadWriteableEnum write(TYPE value) {
-        this->value = value;
+        this->value = (TYPE_UINT8) value;
         return *this;
     }
 
