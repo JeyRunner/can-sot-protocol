@@ -12,8 +12,8 @@ CPMAddPackage(
         VERSION 0.10.0
         OPTIONS "RYML_WITH_TAB_TOKENS ON"
 )
-CPMAddPackage("gh:jbeder/yaml-cpp#0.8.0")
-
+#CPMAddPackage("gh:jbeder/yaml-cpp#0.8.0")
+CPMAddPackage("gh:jbeder/yaml-cpp#a83cd31548b19d50f3f983b069dceb4f4d50756d")
 
 
 ## Cli Tool #######################
