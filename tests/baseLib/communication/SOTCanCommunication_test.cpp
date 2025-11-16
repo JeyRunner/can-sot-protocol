@@ -132,6 +132,7 @@ TEST_CASE("MasterClient communication: master send read request to client") {
 
   // master reads value client master
   masterProtocol.objectTree.settings.value2.sendReadValueReq();
+  //masterProtocol.objectTree.settings.value2.sendReadValueReqBlocking(); // should not compile
   // OR: masterProtocol.sendReadValueReq(masterProtocol.objectTree.settings.value2);
   REQUIRE(master.framesSend.size() == 1);
   CHECK(master.getLastSendFrameType() == READ_NODE_VALUE_REQEUST);

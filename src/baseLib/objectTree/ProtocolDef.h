@@ -26,6 +26,8 @@ concept ProtocolDefType = requires(T) {
  */
 template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE, uint8_t RCCALLER_TABLE_SIZE, uint8_t RCCALLABLE_TABLE_SIZE>
 struct ProtocolDef {
+    using COMMUNICATION_CLASS_TYPE = COMMUNICATION_CLASS;
+
     uint8_t otTableSize = OT_TABLE_SIZE;
     uint8_t rcCallerTableSize = RCCALLER_TABLE_SIZE;
     uint8_t rcCallableTableSize = RCCALLABLE_TABLE_SIZE;

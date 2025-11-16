@@ -14,6 +14,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPM.cmake)
 CPMAddPackage("gh:doctest/doctest@2.4.11")
 CPMAddPackage("gh:ETLCPP/etl#20.37.2")
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
+CPMAddPackage("gh:TartanLlama/expected@1.1.0")
 
 
 
@@ -36,7 +37,7 @@ target_include_directories(${PROJECT_NAME}-baseLib PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/baseLib/>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/driver/>
         )
-target_link_libraries(${PROJECT_NAME}-baseLib PUBLIC etl::etl)
+target_link_libraries(${PROJECT_NAME}-baseLib PUBLIC etl::etl expected)
 
 ## just for dev, so that we get nice code completion for some templates
 # !! deactivate for using the library !!
@@ -52,7 +53,7 @@ target_include_directories(${PROJECT_NAME}-baseLib-tests PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/src/driver
         "${CMAKE_CURRENT_LIST_DIR}/tests/testUtil/"
         )
-target_link_libraries(${PROJECT_NAME}-baseLib-tests PRIVATE etl::etl doctest::doctest )
+target_link_libraries(${PROJECT_NAME}-baseLib-tests PRIVATE etl::etl doctest::doctest expected)
 
 
 

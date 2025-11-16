@@ -143,7 +143,7 @@ class SOTCanCommunication {
       sendMessage(SOT_MESSAGE_TYPE::READ_NODE_VALUE_RESPONSE, targetDeviceId, data, dataSize);
     }
 
-
+  public:
     void sendRemoteCallRequest(RemoteCallCallerAbstract &call, RemoteCallDataWritable &args, uint8_t targetDeviceId) {
         uint8_t dataSize = 1 + args.getRequiredDataSizeBytes(); // first byte for nodeId
         uint8_t data[dataSize];
@@ -152,6 +152,7 @@ class SOTCanCommunication {
         sendMessage(SOT_MESSAGE_TYPE::REMOTE_CALL_REQUEST, targetDeviceId, data, dataSize);
     }
 
+  protected:
     void sendRemoteCallResponseOk(RemoteCallCallableAbstract &call, RemoteCallDataWritable &returnData, uint8_t targetDeviceId) {
         uint8_t dataSize = 1 + returnData.getRequiredDataSizeBytes(); // first byte for nodeId
         uint8_t data[dataSize];

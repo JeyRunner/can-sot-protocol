@@ -5,6 +5,7 @@
 #include "OTUtil.h"
 #include "communication/can/Can.h"
 #include "util/EventFlag.h"
+#include "communication/threaded/SOTMasterLockableType.h"
 
 template<typename COMMUNICATION_CLASS, unsigned int OT_TABLE_SIZE, unsigned int INIT_NODES_SIZE, uint8_t RCCALLER_TABLE_SIZE, uint8_t RCCALLABLE_TABLE_SIZE>
 struct ProtocolDef;
@@ -193,6 +194,24 @@ class ValueNodeReadWriteable: public ValueNodeTypeAbstractWithProt<TYPE, COMMUNI
     TYPE read() {
       return ((ValueNodeTypeAbstract<TYPE>*) this)->value;
     }
+
+    /**
+     * Send a request for reading the current value of this node from a remote client or server.
+     * When the new read value arrives it will directly overwrite the current value of this node.
+     * This will put the corresponding can frame directly into the can send buffer.
+     * @note This will block until the new value has arrived and will return the new value.
+     *       The receivedValueUpdate flag will also be set to true after the value was received.
+     *       This function is only available when used from a SOTMasterThreaded, it is not supported for clients.
+     */
+    //template<typename T=COMMUNICATION_CLASS, std::enable_if_t<std::is_base_of_v<SOTMasterLockableType, T>, bool> = true>
+    template<typename T=COMMUNICATION_CLASS, typename = std::enable_if_t<InnerTypeIsBaseOfSOTMasterLockableT<T>::value>>
+    inline TYPE sendReadValueReqBlocking()  {
+      if constexpr (InnerTypeIsBaseOfSOTMasterLockableT<T>::value) {
+        //using ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>::sotCommunication;
+        ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS>::sotCommunication->sendReadValueReqBlocking(*this);
+        return this->read();
+      }
+    }
 };
 
 
@@ -210,13 +229,34 @@ public:
 
 template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
 class ValueNodeReadableEnum: public ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS> {
-public:
+  protected:
+    using ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>::sotCommunication;
+
+  public:
     ValueNodeReadableEnum(): ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>(NODE_ID) {
     };
     TYPE read() {
         return static_cast<TYPE>(((ValueNodeTypeAbstract<TYPE_UINT8>*) this)->value);
     }
+
+    /**
+     * Send a request for reading the current value of this node from a remote client or server.
+     * When the new read value arrives it will directly overwrite the current value of this node.
+     * This will put the corresponding can frame directly into the can send buffer.
+     * @note This will block until the new value has arrived and will return the new value.
+     *       The receivedValueUpdate flag will also be set to true after the value was received.
+     *       This function is only available when used from a SOTMasterThreaded, it is not supported for clients.
+     */
+    template<typename T=COMMUNICATION_CLASS, typename = std::enable_if_t<InnerTypeIsBaseOfSOTMasterLockableT<T>::value>>
+    inline TYPE sendReadValueReqBlocking()  {
+      if constexpr (InnerTypeIsBaseOfSOTMasterLockableT<T>::value) {
+        //using ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS>::sotCommunication;
+        ValueNodeTypeAbstractWithProt<TYPE, COMMUNICATION_CLASS>::sotCommunication->sendReadValueReqBlocking(*this);
+        return this->read();
+      }
+    }
 };
+
 template<class TYPE, NodeId NODE_ID, class COMMUNICATION_CLASS>
 class ValueNodeReadWriteableEnum: public ValueNodeTypeAbstractWithProt<TYPE_UINT8, COMMUNICATION_CLASS> {
 public:

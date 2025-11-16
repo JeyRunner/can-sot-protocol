@@ -10,6 +10,7 @@
 
 #include "TestUtil.h"
 #include "MockSOTProtocol.hpp"
+#include "communication/threaded/SOTMasterLockable.h"
 
 using namespace std;
 
@@ -120,6 +121,20 @@ class TestSOTMaster : public SOTMaster<MockTestProtocol, TestSOTMaster>, public 
         this->processCanFrameReceived(f.frame);
       }
       */
+    }
+};
+
+class TestSOTMasterLockable : public SOTMasterLockableGeneric<MockTestProtocol, TestSOTMasterLockable, TestSOTMasterLockable>, public MockCanBuffer {
+  public:
+    using SOTMasterLockableGeneric<MockTestProtocol, TestSOTMasterLockable, TestSOTMasterLockable>::sendInitCommunicationRequest;
+
+    explicit TestSOTMasterLockable():
+    MockCanBuffer("Master"),
+    SOTMasterLockableGeneric<MockTestProtocol, TestSOTMasterLockable, TestSOTMasterLockable>(*this) {}
+
+    void processCanFramesReceived(list<CanFrameWithData> &frames) {
+      framesReceived = frames;
+      processCanFrames();
     }
 };
 

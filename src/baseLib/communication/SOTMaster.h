@@ -10,15 +10,22 @@
 #include "SOTCanCommunication.h"
 #include "util/EventFlag.h"
 
+/*
 template<template <class T> class PROTOCOL_DEF, class CAN_INTERFACE_CLASS>
 class SOTMaster;
+*/
 
 
-template<template <class T> class PROTOCOL_DEF, class CAN_INTERFACE_CLASS>
-struct ConnectedClient {
+
+
+
+template<template <class T> class PROTOCOL_DEF, class SOT_MASTER, class CONNECTED_CLIENT>
+struct ConnectedClientGeneric {
+    using SOT_MASTER_TYPE = SOT_MASTER;
+
     SOT_COMMUNICATION_STATE communicationState = SOT_COMMUNICATION_STATE::UNINITIALIZED;
     /// contains object tree
-    PROTOCOL_DEF<ConnectedClient> protocol;
+    PROTOCOL_DEF<CONNECTED_CLIENT> protocol;
 
     /// event flag is set when client is successfully connected to this master
     EventFlag gotConnectedEvent;
@@ -31,8 +38,8 @@ struct ConnectedClient {
 
 
     uint8_t deviceId;
-    SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS> *sotMaster = nullptr;
-    explicit ConnectedClient() : protocol(this) {}
+    SOT_MASTER *sotMaster = nullptr;
+    explicit ConnectedClientGeneric() : protocol((CONNECTED_CLIENT*)this) {}
 
     inline void sendValue(ValueNodeAbstract &vNode) {
         sotMaster->sendValue(vNode, deviceId);
@@ -63,13 +70,20 @@ struct ConnectedClient {
     }
 };
 
+template<template <class T> class PROTOCOL_DEF, class SOT_MASTER>
+struct ConnectedClient: public ConnectedClientGeneric<PROTOCOL_DEF, SOT_MASTER, ConnectedClient<PROTOCOL_DEF, SOT_MASTER>> {
+};
+
+
 
 #ifdef DEV_MODE
 using PROTOCOL_DEF = ProtocolDef<1,1>; // just dummy value to get code autocompletion
 #else
-template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS>
+template<template <class T> class PROTOCOL_DEF /* = ProtocolDef<_DummpProtocl, 1,1>*/, class CAN_INTERFACE_CLASS,
+        class _MASTER_CLASS, class _CONNECTED_CLIENT_CLASS> //SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS, X, X>>
 #endif
-class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
+class SOTMasterGeneric: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>
+{
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSize;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForNodeId;
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::checkPackageDataSizeForRemoteCall;
@@ -87,13 +101,14 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
 
   private:
     //using M = ConnectedClient<PROTOCOL_DEF>;
-    using Client = ConnectedClient<PROTOCOL_DEF, CAN_INTERFACE_CLASS>;
+    //using Client = ConnectedClient<PROTOCOL_DEF, PROTOCOL_DEF::COMMUNICATION_CLASS_TYPE>;
+    using Client = _CONNECTED_CLIENT_CLASS; //ConnectedClient<PROTOCOL_DEF, _MASTER_CLASS>;
 
     /// id is the client deviceId
     std::map<uint8_t, Client> clients;
 
   public:
-    explicit SOTMaster(CAN_INTERFACE_CLASS &canInterface): SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>(canInterface) {
+    explicit SOTMasterGeneric(CAN_INTERFACE_CLASS &canInterface): SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>(canInterface) {
       myDeviceId = 0;
     }
 
@@ -121,7 +136,7 @@ class SOTMaster: public SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS> {
             }
           }
           else {
-            logWarn("Got INIT_COMMUNICATION_RESPONSE although currently not in SENT_INITIALIZATION_REQUEST state");
+            logWarn("Got INIT_COMMUNICATION_RESPONSE although currently not in INITIALIZING state");
           }
           break;
         }
@@ -247,7 +262,7 @@ public:
         return false;
       }
       auto &client = clients[clientDeviceId]; //clients.emplace(clientDeviceId, ConnectedClient<PROTOCOL_DEF>{}); // @todo seems move values on access -> references are invalid
-      client.sotMaster = this;
+      client.sotMaster = (_MASTER_CLASS*) this;
       client.deviceId = clientDeviceId;
       sendInitCommunicationRequest(clientDeviceId);
       client.communicationState = SOT_COMMUNICATION_STATE::INITIALIZING;
@@ -281,14 +296,14 @@ public:
     Client &getClient(uint8_t clientDeviceId) {
         auto c = clients.find(clientDeviceId);
         if (c == clients.end()) {
-            throw std::runtime_error("client with does not exist");
+            throw std::runtime_error("client with id " + to_string(clientDeviceId) + " does not exist");
         }
         return c->second;
     }
 
 
 
-private:
+public:
     inline void sendValue(ValueNodeAbstract &vNode, uint8_t clientDeviceId) {
         sendWriteNodeValueRequest(vNode, clientDeviceId);
     }
@@ -302,4 +317,17 @@ private:
     using SOTCanCommunication<PROTOCOL_DEF, CAN_INTERFACE_CLASS>::sendInitCommunicationRequest;
 
     friend Client;
+};
+
+
+
+template<template <class T> class PROTOCOL_DEF, class CAN_INTERFACE_CLASS>
+class SOTMaster: public SOTMasterGeneric<PROTOCOL_DEF, CAN_INTERFACE_CLASS, SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS>,
+                                         ConnectedClient<PROTOCOL_DEF, SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS>>>
+{
+  public:
+    explicit SOTMaster(CAN_INTERFACE_CLASS &canInterface)
+    : SOTMasterGeneric<PROTOCOL_DEF, CAN_INTERFACE_CLASS, SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS>,
+            ConnectedClient<PROTOCOL_DEF, SOTMaster<PROTOCOL_DEF, CAN_INTERFACE_CLASS>>>(canInterface) {
+    }
 };

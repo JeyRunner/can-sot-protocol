@@ -1,8 +1,8 @@
 [![pipeline status](https://gitlab.com/JeyRunner/can-sot-protocol/badges/main/pipeline.svg)](https://gitlab.com/JeyRunner/can-sot-protocol/-/commits/main)
 
-# CAN SOT Protocol 🌳  &emsp;  🚧 WIP 🚧
+# CAN SOT Protocol 🌳 
 This is the **CAN _simple object tree_ protocol** for the CAN bus.
-Although it uses ideas from CANopen, it is not compatible with it but can be seen as a very simplified version.
+Although it uses ideas from CANopen, it is not compatible with it but can be seen as a simplified version of CANopen.
 
 ## Concepts
 
@@ -146,7 +146,8 @@ while (true) {
 | master | linux [`socketCAN`] | 🏗️ in progress | [client-linux](example%2Fclient-linux)         |
 | client | linux [`socketCAN`] | 🏗️ in progress | [master-linux](example%2Fmaster-linux)         |
 | client | stm32 [`STM32 HAL`] | 🏗️ in progress | [client-stm32-hal](example%2Fclient-stm32-hal) |
-| client | esp32 [`ESP-IDF`]   | ✍🏻 planned     |                                                |
+
+<!--- | client | esp32 [`ESP-IDF`]   | ✍🏻 planned     |                                                | -->
 
 
 ### Compile CAN Sot
