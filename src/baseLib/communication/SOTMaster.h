@@ -2,6 +2,7 @@
 
 #include <map>
 #include <stdexcept>
+#include <string>
 #include "objectTree/OTDeclares.h"
 #include "can/CanPackages.h"
 #include "SOTDefs.h"
@@ -296,7 +297,7 @@ public:
     Client &getClient(uint8_t clientDeviceId) {
         auto c = clients.find(clientDeviceId);
         if (c == clients.end()) {
-            throw std::runtime_error("client with id " + to_string(clientDeviceId) + " does not exist");
+            throw std::runtime_error("client with id " + std::to_string(clientDeviceId) + " does not exist");
         }
         return c->second;
     }
