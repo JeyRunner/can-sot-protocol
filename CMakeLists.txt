@@ -11,7 +11,7 @@ project(
 ## Dependencies ###################
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/CPM.cmake)
 
-CPMAddPackage("gh:doctest/doctest@2.4.11")
+CPMAddPackage("gh:doctest/doctest@2.4.12")
 CPMAddPackage("gh:ETLCPP/etl#20.37.2")
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 CPMAddPackage("gh:TartanLlama/expected@1.1.0")
