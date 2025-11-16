@@ -1,6 +1,6 @@
 
 ## Dependencies ###################
-CPMAddPackage("gh:bfgroup/Lyra#1.5.1")
+CPMAddPackage("gh:bfgroup/Lyra#1.7.0")
 CPMAddPackage(
         GITHUB_REPOSITORY "ArthurSonzogni/FTXUI"
         VERSION 3.0.0
@@ -9,7 +9,7 @@ CPMAddPackage(
 #CPMAddPackage("gh:biojppm/rapidyaml@0.5.0")
 CPMAddPackage(
         GITHUB_REPOSITORY "biojppm/rapidyaml"
-        VERSION 0.5.0
+        VERSION 0.10.0
         OPTIONS "RYML_WITH_TAB_TOKENS ON"
 )
 CPMAddPackage("gh:jbeder/yaml-cpp#0.8.0")

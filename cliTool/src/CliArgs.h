@@ -25,7 +25,7 @@ class CliArgs {
     bool parse(int argc, const char **argv) {
       auto cli_result = cli.parse({argc, argv});
       if (!cli_result){
-        std::cerr << "Error in command line: " << cli_result.errorMessage() << std::endl;
+        std::cerr << "Error in command line: " << cli_result.message() << std::endl;
         exit(1);
       }
       if (showHelp){
