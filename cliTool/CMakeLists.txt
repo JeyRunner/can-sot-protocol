@@ -3,7 +3,7 @@
 CPMAddPackage("gh:bfgroup/Lyra#1.7.0")
 CPMAddPackage(
         GITHUB_REPOSITORY "ArthurSonzogni/FTXUI"
-        VERSION 3.0.0
+        VERSION 6.1.9
         OPTIONS "FTXUI_BUILD_EXAMPLES OFF"
         )
 #CPMAddPackage("gh:biojppm/rapidyaml@0.5.0")
